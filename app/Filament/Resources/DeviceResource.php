@@ -102,7 +102,7 @@ class DeviceResource extends Resource
                         // $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrCodeText);
 
                         $encodedUrl = urlencode($qrCodeText);
-                        return redirect()->route('filament.pages.view-qr-code', ['qrCodeUrl' => $encodedUrl]);
+                        return redirect()->route('filament.pages.view-qr-code', ['qrCodeText' => $encodedUrl]);
 
 
                     try {
