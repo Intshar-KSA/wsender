@@ -3,66 +3,55 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ChatBotResource\Pages;
-use App\Filament\Resources\ChatBotResource\RelationManagers;
 use App\Models\ChatBot;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ChatBotResource extends Resource
 {
     protected static ?string $model = ChatBot::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                // Forms\Components\TextInput::make('device_id')
-                //     ->required()
-                //     ->numeric(),
-                    Forms\Components\Select::make('device_id')
-                    ->relationship('user_device', 'nickname') // Assuming there is a relationship defined in the ChatBot model
-                    ->required(),
+                Forms\Components\Select::make('device_id')
+                    ->relationship('user_device', 'nickname')
+                    ->required()
+                    ->label('Device'),
                 Forms\Components\Textarea::make('msg')
                     ->required()
-                    ->columnSpanFull(),
-                // Forms\Components\TextInput::make('content_id')
-                //     ->required()
-                //     ->numeric(),
-                    Forms\Components\Select::make('content_id')
-                    ->relationship('content', 'title') // Assuming there is a relationship defined in the ChatBot model
-                    ->required(),
-                // Forms\Components\TextInput::make('type')
-                //     ->required(),
-                    Forms\Components\Select::make('type')
+                    ->columnSpanFull()
+                    ->label('Message'),
+                Forms\Components\Select::make('content_id')
+                    ->relationship('content', 'title')
+                    ->required()
+                    ->label('Content'),
+                Forms\Components\Select::make('type')
                     ->options([
-                        'exact' => 'exact',
-                         'contains' => 'contains',
-                        // 'doc' => 'Document',
+                        'exact' => 'Exact',
+                        'contains' => 'Contains',
                     ])
-                    ->required(),
-                // Forms\Components\TextInput::make('msg_type')
-                //     ->required(),
-                    Forms\Components\Select::make('msg_type')
+                    ->required()
+                    ->label('Match Type'),
+                Forms\Components\Select::make('msg_type')
                     ->options([
-                        'reply' => 'reply',
-                        // 'image' => 'Image',
-                        // 'doc' => 'Document',
+                        'reply' => 'Reply',
                     ])
-                    ->required(),
-                // Forms\Components\TextInput::make('status')
-                //     ->required(),
-                    Forms\Components\Toggle::make('status')
+                    ->required()
+                    ->label('Message Type'),
+                Forms\Components\Toggle::make('status')
                     ->required()
                     ->onColor('success')
                     ->offColor('danger')
-                    ->inline(false),
+                    ->label('Status'),
             ]);
     }
 
@@ -70,15 +59,26 @@ class ChatBotResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('device_id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('user_device.nickname')
+                    ->label('Device')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('content.title')
+                    ->label('Content')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Match Type')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('content_id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('msg_type')
+                    ->label('Message Type')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('type'),
-                Tables\Columns\TextColumn::make('msg_type'),
-                Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->label('Status')
+                    ->colors([
+                        'success' => fn ($state): bool => $state === 'on',
+                        'danger' => fn ($state): bool => $state === 'off',
+                    ]),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -89,7 +89,35 @@ class ChatBotResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('device_id')
+                    ->label('Device')
+                    ->relationship('user_device', 'nickname')
+                    ->searchable(),
+                
+                SelectFilter::make('content_id')
+                    ->label('Content')
+                    ->relationship('content', 'title')
+                    ->searchable(),
+                
+                SelectFilter::make('type')
+                    ->options([
+                        'exact' => 'Exact',
+                        'contains' => 'Contains',
+                    ])
+                    ->label('Match Type'),
+                
+                SelectFilter::make('msg_type')
+                    ->options([
+                        'reply' => 'Reply',
+                    ])
+                    ->label('Message Type'),
+                
+                SelectFilter::make('status')
+                    ->options([
+                        'on' => 'On',
+                        'off' => 'Off',
+                    ])
+                    ->label('Status'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -104,7 +132,7 @@ class ChatBotResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            // Define related resources if needed
         ];
     }
 
@@ -116,13 +144,12 @@ class ChatBotResource extends Resource
             'edit' => Pages\EditChatBot::route('/{record}/edit'),
         ];
     }
+
     public static function getEloquentQuery(): Builder
     {
-        $userId = auth()->user()->id;
-
         return parent::getEloquentQuery()
-            ->whereHas('user_device', function (Builder $query) use ($userId) {
-                $query->where('user_id', $userId);
+            ->whereHas('user_device', function (Builder $query) {
+                $query->where('user_id', auth()->id());
             });
     }
 }

@@ -15,7 +15,8 @@ class ExternalApiService
         $this->baseUrl = 'https://wappi.pro/api';
         $this->headers = [
             'accept' => 'application/json',
-            'Authorization' => '99abcba87402dc4d5ee91f4bc3bcdcf70be07bc6',
+            'Authorization' => '40703bb7812b727ec01c24f2da518c407342559c',
+            // 'Authorization' => '99abcba87402dc4d5ee91f4bc3bcdcf70be07bc6',
             'Content-Type' => 'application/json',
         ];
     }

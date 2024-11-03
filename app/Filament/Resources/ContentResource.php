@@ -3,47 +3,46 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContentResource\Pages;
-use App\Filament\Resources\ContentResource\RelationManagers;
 use App\Models\Content;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ContentResource extends Resource
 {
     protected static ?string $model = Content::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                // Forms\Components\TextInput::make('user_id')
-                //     ->required()
-                //     ->numeric(),
+                Forms\Components\Select::make('user_id')
+                    ->relationship('user', 'name') // Assuming 'name' is a column in the User model
+                    ->required()
+                    ->label('User'),
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Textarea::make('des')
                     ->required()
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('file')
-                    ->maxLength(255)
-                    ->default(null),
-                // Forms\Components\TextInput::make('file_type')
-                //     ->required(),
-                    Forms\Components\Select::make('file_type')
-    ->options([
-        'video' => 'Video',
-        'image' => 'Image',
-        'doc' => 'Document',
-    ])
-    ->required(),
+                Forms\Components\FileUpload::make('file')
+                    ->label('File')
+                    ->directory('uploads/contents')
+                    ->nullable(),
+                Forms\Components\Select::make('file_type')
+                    ->options([
+                        'video' => 'Video',
+                        'image' => 'Image',
+                        'doc' => 'Document',
+                    ])
+                    ->required()
+                    ->label('File Type'),
             ]);
     }
 
@@ -51,14 +50,16 @@ class ContentResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user_id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('User')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('file')
+                    ->label('File')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('file_type'),
+                Tables\Columns\TextColumn::make('file_type')
+                    ->label('File Type'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -69,7 +70,13 @@ class ContentResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('file_type')
+                    ->options([
+                        'video' => 'Video',
+                        'image' => 'Image',
+                        'doc' => 'Document',
+                    ])
+                    ->label('Filter by File Type'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
