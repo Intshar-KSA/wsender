@@ -13,6 +13,7 @@ class Device extends Model
         'profile_id',
         'webhook_url',
         'user_id',
+        'status',
     ];
 
     // Relationship with User

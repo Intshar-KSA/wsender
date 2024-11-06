@@ -35,6 +35,11 @@ class DeviceResource extends Resource
                 Forms\Components\TextInput::make('webhook_url')
                     ->maxLength(255)
                     ->default(null),
+                    Forms\Components\Toggle::make('status')
+                    ->label('Active Status')
+                    ->default(false) // افتراضيًا غير نشط
+                    ->inline(false),
+    
             ]);
     }
 
@@ -46,6 +51,10 @@ class DeviceResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('webhook_url')
                     ->searchable(),
+                    Tables\Columns\BooleanColumn::make('status')
+                    ->label('Active')
+                    ->sortable(),
+               
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
