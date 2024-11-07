@@ -1,5 +1,5 @@
 <x-filament::page>
-    <div class="flex justify-center items-center">
+    <div class="flex justify-center items-center" wire:poll.7s="refreshQrCode">
         @if(isset($errorMessage))
         <p>{{ $errorMessage }}</p>
         @else
@@ -11,11 +11,9 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // تحديث الباركود كل ثلاث ثواني
-        setInterval(function() {
-            Livewire.emit('refreshQrCode');
-        }, 3000);
+    window.addEventListener('notify', event => {
+        alert(event.detail.message); // عرض الرسالة بنجاح
     });
     </script>
+
 </x-filament::page>
