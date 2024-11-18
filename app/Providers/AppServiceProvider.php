@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Events\DeviceCreated;
+use App\Listeners\ActivateFreePlanForDevice;
+use Illuminate\Support\Facades\Event;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+
+
+// Event::listen(
+//     DeviceCreated::class,
+//     ActivateFreePlanForDevice::class
+// );
     }
 }

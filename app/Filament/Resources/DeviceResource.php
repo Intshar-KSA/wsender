@@ -65,7 +65,10 @@ class DeviceResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                \Filament\Tables\Filters\SelectFilter::make('subscriptions.plan_id')
+                ->label('Plan')
+                ->relationship('subscriptions', 'plan_id')
+                ->options(fn () => \App\Models\Plan::pluck('title', 'id')->toArray()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -171,7 +174,8 @@ class DeviceResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Resources\SubscriptionResource\RelationManagers\SubscriptionsRelationManager::class,
+
         ];
     }
 

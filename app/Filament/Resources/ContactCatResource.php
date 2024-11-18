@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\ContactCat;
 use Filament\Forms;
+use Filament\Tables;
 use Filament\Forms\Form;
 
-use Filament\Tables;
+use App\Models\ContactCat;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Filament\Resources\ContactCatResource\Pages;

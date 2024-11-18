@@ -13,9 +13,9 @@ class ChatBot extends Model
         'msg',
         'content_id',
         'type',
-        'msg_type',
         'status',
     ];
+    
 
     // Relationship with Device
     public function device()

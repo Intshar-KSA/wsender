@@ -35,11 +35,12 @@ class ContentResource extends Resource
                     ->label('File')
                     ->directory('uploads/contents')
                     ->nullable(),
-                Forms\Components\Select::make('file_type')
+                    Forms\Components\Select::make('file_type')
                     ->options([
                         'video' => 'Video',
                         'image' => 'Image',
                         'doc' => 'Document',
+                        'text' => 'Text', // النوع الجديد
                     ])
                     ->required()
                     ->label('File Type'),
@@ -58,8 +59,15 @@ class ContentResource extends Resource
                 Tables\Columns\TextColumn::make('file')
                     ->label('File')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('file_type')
-                    ->label('File Type'),
+                    Tables\Columns\TextColumn::make('file_type')
+                    ->label('File Type')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'video' => 'Video',
+                        'image' => 'Image',
+                        'doc' => 'Document',
+                        'text' => 'Text',
+                        default => 'Unknown',
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -71,12 +79,14 @@ class ContentResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('file_type')
-                    ->options([
-                        'video' => 'Video',
-                        'image' => 'Image',
-                        'doc' => 'Document',
-                    ])
-                    ->label('Filter by File Type'),
+                ->options([
+                    'video' => 'Video',
+                    'image' => 'Image',
+                    'doc' => 'Document',
+                    'text' => 'Text', // النوع الجديد
+                ])
+                ->label('Filter by File Type'),
+            
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

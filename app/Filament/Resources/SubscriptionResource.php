@@ -3,75 +3,75 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriptionResource\Pages;
-use App\Filament\Resources\SubscriptionResource\RelationManagers;
 use App\Models\Subscription;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class SubscriptionResource extends Resource
 {
     protected static ?string $model = Subscription::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
-    public static function form(Form $form): Form
+    public static function form(Forms\Form $form): Forms\Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('device_id')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('number_of_days')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('price')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
+                Forms\Components\Select::make('user_id')
+                    ->relationship('user', 'name')
+                    ->label('User')
+                    ->required(),
+                Forms\Components\Select::make('device_id')
+                    ->relationship('device', 'nickname')
+                    ->label('Device')
+                    ->required(),
+                Forms\Components\Select::make('plan_id')
+                    ->relationship('plan', 'title')
+                    ->label('Plan')
+                    ->required(),
+                Forms\Components\DatePicker::make('start_date')
+                    ->label('Start Date')
+                    ->required(),
             ]);
     }
 
-    public static function table(Table $table): Table
+    public static function table(Tables\Table $table): Tables\Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('device_id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('User')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('number_of_days')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('device.nickname')
+                    ->label('Device')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('price')
-                    ->money()
+                Tables\Columns\TextColumn::make('plan.title')
+                    ->label('Plan')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('start_date')
+                    ->label('Start Date')
+                    ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created At')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
             ])
             ->filters([
-                //
+                // يمكن إضافة فلاتر إذا لزم الأمر
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

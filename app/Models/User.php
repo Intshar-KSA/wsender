@@ -59,4 +59,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(Content::class);
     }
+
+
+//     public function activateFreePlan(): void
+// {
+//     $freePlan = Plan::where('is_free', true)->first();
+
+//     if ($freePlan) {
+//         $this->subscriptions()->create([
+//             'device_id' => null, // يمكن تغييره حسب احتياجاتك
+//             'plan_id' => $freePlan->id,
+//             'start_date' => now(),
+//         ]);
+//     }
+// }
+public function subscriptions()
+{
+    return $this->hasMany(Subscription::class);
+}
 }

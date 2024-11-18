@@ -9,7 +9,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 
 class CampaignResource extends Resource
@@ -30,9 +29,18 @@ class CampaignResource extends Resource
                 Forms\Components\Select::make('content_id')
                     ->relationship('content', 'title')
                     ->required(),
-                Forms\Components\Textarea::make('receivers_phones')
-                    ->required()
-                    ->columnSpanFull(),
+                Forms\Components\Select::make('from_contact_id')
+                    ->label('From Contact')
+                    ->relationship('fromContact', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+                Forms\Components\Select::make('to_contact_id')
+                    ->label('To Contact')
+                    ->relationship('toContact', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
                 Forms\Components\TextInput::make('message_every')
                     ->required()
                     ->numeric(),
@@ -46,8 +54,11 @@ class CampaignResource extends Resource
                     ->required(),
                 Forms\Components\TimePicker::make('allowed_period_to')
                     ->required(),
-                Forms\Components\Select::make('status')
-                    ->options(['on' => 'On', 'off' => 'Off'])
+                    Forms\Components\Toggle::make('status')
+                    ->label('Status')
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->default(false)
                     ->required(),
             ]);
     }
@@ -65,6 +76,12 @@ class CampaignResource extends Resource
                 Tables\Columns\TextColumn::make('content.title')
                     ->label('Content Title')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('fromContact.name')
+                    ->label('From Contact')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('toContact.name')
+                    ->label('To Contact')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('message_every')
                     ->numeric()
                     ->sortable(),
@@ -73,11 +90,23 @@ class CampaignResource extends Resource
                 Tables\Columns\TextColumn::make('starting_time'),
                 Tables\Columns\TextColumn::make('allowed_period_from'),
                 Tables\Columns\TextColumn::make('allowed_period_to'),
-                Tables\Columns\BadgeColumn::make('status')
-                    ->colors([
-                        'success' => fn ($state): bool => $state === 'on',
-                        'danger' => fn ($state): bool => $state === 'off',
-                    ]),
+                // Tables\Columns\BadgeColumn::make('status')
+                //     ->colors([
+                //         'success' => fn ($state): bool => $state === 'on',
+                //         'danger' => fn ($state): bool => $state === 'off',
+                //     ]),
+                Tables\Columns\ToggleColumn::make('status')
+    ->label('Status')
+    ->onColor('success')
+    ->offColor('danger')
+    ->onIcon('heroicon-o-check-circle')
+    ->offIcon('heroicon-o-x-circle')
+    ->action(function (Campaign $record, $state): void {
+        // تحديث الحالة مباشرة
+        $record->update(['status' => $state ? 'on' : 'off']);
+    })
+    ->sortable()
+    ->tooltip('Click to toggle status'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -89,38 +118,17 @@ class CampaignResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
-                    ->options(['on' => 'On', 'off' => 'Off']),
-                Filter::make('starting_time')
-                    ->form([
-                        Forms\Components\TimePicker::make('starting_time')
-                            ->label('Starting Time')
+                    ->options([
+                        1 => 'On',  // 1 تمثل القيمة المنطقية true
+                        0 => 'Off', // 0 تمثل القيمة المنطقية false
                     ])
-                    ->query(function (Builder $query, array $data) {
-                        if ($data['starting_time']) {
-                            $query->whereTime('starting_time', $data['starting_time']);
-                        }
-                    }),
-                Filter::make('allowed_period_from')
-                    ->form([
-                        Forms\Components\TimePicker::make('allowed_period_from')
-                            ->label('Allowed Period From')
-                    ])
-                    ->query(function (Builder $query, array $data) {
-                        if ($data['allowed_period_from']) {
-                            $query->whereTime('allowed_period_from', $data['allowed_period_from']);
-                        }
-                    }),
-                Filter::make('allowed_period_to')
-                    ->form([
-                        Forms\Components\TimePicker::make('allowed_period_to')
-                            ->label('Allowed Period To')
-                    ])
-                    ->query(function (Builder $query, array $data) {
-                        if ($data['allowed_period_to']) {
-                            $query->whereTime('allowed_period_to', $data['allowed_period_to']);
+                    ->query(function (Builder $query, $state) {
+                        if ($state !== null) {
+                            $query->where('status', $state);
                         }
                     }),
             ])
+            
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
@@ -133,9 +141,7 @@ class CampaignResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            // Add any relation managers if needed
-        ];
+        return [];
     }
 
     public static function getPages(): array

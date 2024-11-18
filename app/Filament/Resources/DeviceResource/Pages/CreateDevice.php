@@ -8,6 +8,8 @@ use Filament\Notifications\Notification;
 use App\Filament\Resources\DeviceResource;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Validation\ValidationException;
+use App\Events\DeviceCreated; 
+use Illuminate\Support\Facades\Log;
 
 class CreateDevice extends CreateRecord
 {
@@ -63,6 +65,14 @@ class CreateDevice extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function afterCreate(): void
+    {
+        Log::info('Device created: ', ['device_id' => $this->record->id]); // تسجيل الجهاز
+
+        // استدعاء الحدث بعد إنشاء الجهاز
+        DeviceCreated::dispatch($this->record);
     }
 
 }

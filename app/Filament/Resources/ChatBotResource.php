@@ -33,7 +33,7 @@ class ChatBotResource extends Resource
                 Forms\Components\Select::make('content_id')
                     ->relationship('content', 'title')
                     ->required()
-                    ->label('Content'),
+                    ->label('Replay'),
                 Forms\Components\Select::make('type')
                     ->options([
                         'exact' => 'Exact',
@@ -41,12 +41,7 @@ class ChatBotResource extends Resource
                     ])
                     ->required()
                     ->label('Match Type'),
-                Forms\Components\Select::make('msg_type')
-                    ->options([
-                        'reply' => 'Reply',
-                    ])
-                    ->required()
-                    ->label('Message Type'),
+              
                 Forms\Components\Toggle::make('status')
                     ->required()
                     ->onColor('success')
@@ -64,15 +59,13 @@ class ChatBotResource extends Resource
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('content.title')
-                    ->label('Content')
+                    ->label('Replay')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('type')
                     ->label('Match Type')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('msg_type')
-                    ->label('Message Type')
-                    ->sortable(),
+              
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->colors([
@@ -95,7 +88,7 @@ class ChatBotResource extends Resource
                     ->searchable(),
                 
                 SelectFilter::make('content_id')
-                    ->label('Content')
+                    ->label('Replay')
                     ->relationship('content', 'title')
                     ->searchable(),
                 
@@ -105,12 +98,6 @@ class ChatBotResource extends Resource
                         'contains' => 'Contains',
                     ])
                     ->label('Match Type'),
-                
-                SelectFilter::make('msg_type')
-                    ->options([
-                        'reply' => 'Reply',
-                    ])
-                    ->label('Message Type'),
                 
                 SelectFilter::make('status')
                     ->options([

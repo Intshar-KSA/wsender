@@ -21,8 +21,7 @@ class Device extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-
+ 
     // Relationship with Subscriptions
     public function subscriptions()
     {
