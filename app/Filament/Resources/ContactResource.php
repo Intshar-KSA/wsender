@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Filament\Resources\ContactResource\Pages;
+use Illuminate\Database\Eloquent\Builder;
 
 class ContactResource extends Resource
 {
@@ -32,13 +33,16 @@ class ContactResource extends Resource
                 //     ->required()
                 //     ->label('User'),
                 Forms\Components\Hidden::make('user_id')
-                ->default(auth()->id()),
+                ->default(auth()->id())
+                ->required(),
+            
+            
                 Forms\Components\Select::make('contact_cat_id')
-                    ->relationship('contactCat', 'name')
-                    ->searchable()
-                    ->required()
-                    ->preload()
-                    ->label('Category'),
+                ->relationship('contactCat', 'name', fn (Builder $query) => $query->where('user_id', auth()->id())) // تصفية الفئات بناءً على المستخدم الحالي
+                ->searchable()
+                ->required()
+                ->preload()
+                ->label('Category'),
             ]);
     }
 
@@ -53,6 +57,12 @@ class ContactResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->label('Created At'),
             ])
             ->filters([
+                // Tables\Filters\SelectFilter::make('contact_cat_id')
+                // ->label('Category')
+                // ->options(fn () => \App\Models\ContactCat::pluck('name', 'id')->toArray())
+                // ->query(function ($query, $state) {
+                //     return $query->where('contact_cat_id', $state);
+                // }),
                 // Tables\Filters\Filter::make('By User')
                 //     ->form([
                 //         Forms\Components\Select::make('user_id')
@@ -89,4 +99,11 @@ class ContactResource extends Resource
             'edit' => Pages\EditContact::route('/{record}/edit'),
         ];
     }
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+{
+    return parent::getEloquentQuery()
+        ->where('user_id', auth()->id()) // تصفية السجلات الخاصة بالمستخدم الحالي
+        ->with(['user', 'contactCat']); // تحميل العلاقات لتجنب مشاكل N+1
+}
+
 }

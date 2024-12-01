@@ -15,6 +15,8 @@ use Filament\Tables\Actions\Action;
 use App\Services\ExternalApiService;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\DeviceResource\Pages;
+use Illuminate\Database\Eloquent\Builder; // استيراد النوع الصحيح
+
 
 class DeviceResource extends Resource
 {
@@ -69,6 +71,17 @@ class DeviceResource extends Resource
                 ->label('Plan')
                 ->relationship('subscriptions', 'plan_id')
                 ->options(fn () => \App\Models\Plan::pluck('title', 'id')->toArray()),
+                // Tables\Filters\SelectFilter::make('subscriptions.plan_id')
+                // ->label('Plan')
+                // ->options(function () {
+                //     return \App\Models\Subscription::whereHas('device', function ($query) {
+                //         $query->where('user_id', auth()->id());
+                //     })->get()
+                //     ->pluck('plan.title', 'plan.id')
+                //     ->toArray();
+                // })
+            
+                
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -210,4 +223,9 @@ class DeviceResource extends Resource
             throw new \Exception('Could not delete the record due to API error.');
         }
     }
+    public static function getEloquentQuery(): Builder
+{
+    return parent::getEloquentQuery()->where('user_id', auth()->id());
+}
+
 }

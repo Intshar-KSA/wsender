@@ -29,6 +29,7 @@ class ContactCatResource extends Resource
                     ->label('Category Name'),
                     Forms\Components\Hidden::make('user_id')
                     ->default(auth()->id()),
+                
                 // Forms\Components\Select::make('user_id')
                 //     ->relationship('user', 'name')
                 //     ->searchable()
@@ -43,7 +44,7 @@ class ContactCatResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Category Name'),
-                Tables\Columns\TextColumn::make('user.name')->label('User'),
+                // Tables\Columns\TextColumn::make('user.name')->label('User'),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->label('Created At'),
             ])
             ->filters([
@@ -85,8 +86,11 @@ class ContactCatResource extends Resource
     }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-{
-    return parent::getEloquentQuery()->with('user');
-}
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id()) // تصفية السجلات الخاصة بالمستخدم الحالي
+            ->with('user'); // تحميل العلاقة مع المستخدم
+    }
+    
 
 }

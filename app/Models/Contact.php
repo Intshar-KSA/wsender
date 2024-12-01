@@ -27,8 +27,13 @@ class Contact extends Model
     /**
      * علاقة جهة الاتصال مع التصنيف.
      */
+    // public function contactCat()
+    // {
+    //     return $this->belongsTo(ContactCat::class, 'contact_cat_id');
+    // }
     public function contactCat()
-    {
-        return $this->belongsTo(ContactCat::class, 'contact_cat_id');
-    }
+{
+    return $this->belongsTo(ContactCat::class);
+}
+    
 }

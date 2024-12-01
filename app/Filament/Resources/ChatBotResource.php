@@ -23,17 +23,23 @@ class ChatBotResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('device_id')
-                    ->relationship('user_device', 'nickname')
-                    ->required()
-                    ->label('Device'),
+                ->relationship('user_device', 'nickname', function (Builder $query) {
+                    $query->where('user_id', auth()->id()); // تصفية الأجهزة لتكون خاصة بالمستخدم
+                })
+                ->required()
+                ->label('Device'),
+            
                 Forms\Components\Textarea::make('msg')
                     ->required()
                     ->columnSpanFull()
                     ->label('Message'),
-                Forms\Components\Select::make('content_id')
-                    ->relationship('content', 'title')
+                    Forms\Components\Select::make('content_id')
+                    ->relationship('content', 'title', function (Builder $query) {
+                        $query->where('user_id', auth()->id()); // تصفية المحتويات لتكون خاصة بالمستخدم
+                    })
                     ->required()
                     ->label('Replay'),
+                
                 Forms\Components\Select::make('type')
                     ->options([
                         'exact' => 'Exact',
@@ -41,12 +47,15 @@ class ChatBotResource extends Resource
                     ])
                     ->required()
                     ->label('Match Type'),
+                    Forms\Components\Toggle::make('status')
+    ->required()
+    ->onColor('success')
+    ->offColor('danger')
+    ->label('Status'),
+
               
-                Forms\Components\Toggle::make('status')
-                    ->required()
-                    ->onColor('success')
-                    ->offColor('danger')
-                    ->label('Status'),
+                   
+                
             ]);
     }
 
@@ -66,12 +75,16 @@ class ChatBotResource extends Resource
                     ->label('Match Type')
                     ->sortable(),
               
-                Tables\Columns\BadgeColumn::make('status')
+                    Tables\Columns\ToggleColumn::make('status')
                     ->label('Status')
-                    ->colors([
-                        'success' => fn ($state): bool => $state === 'on',
-                        'danger' => fn ($state): bool => $state === 'off',
-                    ]),
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->onIcon('heroicon-o-check-circle')
+                    ->offIcon('heroicon-o-x-circle')
+                    ->action(function (ChatBot $record, $state): void {
+                        $record->update(['status' => $state]);
+                    })
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -83,15 +96,24 @@ class ChatBotResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('device_id')
-                    ->label('Device')
-                    ->relationship('user_device', 'nickname')
-                    ->searchable(),
+                ->label('Device')
+                ->options(function () {
+                    return \App\Models\Device::where('user_id', auth()->id())
+                        ->pluck('nickname', 'id')
+                        ->toArray();
+                })
+                ->searchable(),
+            
                 
                 SelectFilter::make('content_id')
-                    ->label('Replay')
-                    ->relationship('content', 'title')
-                    ->searchable(),
-                
+                ->label('Replay')
+                ->options(function () {
+                    return \App\Models\Content::where('user_id', auth()->id())
+                        ->pluck('title', 'id')
+                        ->toArray();
+                })
+                ->searchable(),
+            
                 SelectFilter::make('type')
                     ->options([
                         'exact' => 'Exact',

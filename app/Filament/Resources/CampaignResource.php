@@ -117,6 +117,33 @@ class CampaignResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+
+                Tables\Filters\SelectFilter::make('device_id')
+    ->label('Device')
+    ->options(function () {
+        return \App\Models\Device::where('user_id', auth()->id())
+            ->pluck('nickname', 'id')
+            ->toArray();
+    })
+    ->query(function (Builder $query, $state) {
+        if ($state) {
+            $query->where('device_id', $state);
+        }
+    }),
+    Tables\Filters\SelectFilter::make('content_id')
+    ->label('Content')
+    ->options(function () {
+        return \App\Models\Content::where('user_id', auth()->id())
+            ->pluck('title', 'id')
+            ->toArray();
+    })
+    ->query(function (Builder $query, $state) {
+        if ($state) {
+            $query->where('content_id', $state);
+        }
+    }),
+
+
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         1 => 'On',  // 1 تمثل القيمة المنطقية true
@@ -152,4 +179,14 @@ class CampaignResource extends Resource
             'edit' => Pages\EditCampaign::route('/{record}/edit'),
         ];
     }
+  
+    public static function getEloquentQuery(): Builder
+{
+    return parent::getEloquentQuery()
+        ->whereHas('user_device', function (Builder $query) {
+            $query->where('user_id', auth()->id()); // تصفية الأجهزة حسب المستخدم الحالي
+        });
+}
+
+
 }

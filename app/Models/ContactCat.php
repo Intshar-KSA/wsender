@@ -31,4 +31,5 @@ class ContactCat extends Model
     {
         return $this->hasMany(Contact::class, 'contact_cat_id');
     }
+    
 }

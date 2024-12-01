@@ -15,6 +15,10 @@ class ChatBot extends Model
         'type',
         'status',
     ];
+    protected $casts = [
+        'status' => 'boolean',
+    ];
+    
     
 
     // Relationship with Device

@@ -12,6 +12,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 
+
 class ContentResource extends Resource
 {
     protected static ?string $model = Content::class;
@@ -21,10 +22,15 @@ class ContentResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name') // Assuming 'name' is a column in the User model
-                    ->required()
-                    ->label('User'),
+                // Forms\Components\Select::make('user_id')
+                //     ->relationship('user', 'name') // Assuming 'name' is a column in the User model
+                //     ->required()
+                //     ->label('User'),
+                Forms\Components\Hidden::make('user_id')
+    ->default(auth()->id())
+    ->required(),
+
+
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),
@@ -113,4 +119,11 @@ class ContentResource extends Resource
             'edit' => Pages\EditContent::route('/{record}/edit'),
         ];
     }
+
+    public static function getEloquentQuery(): Builder
+{
+    return parent::getEloquentQuery()
+        ->where('user_id', auth()->id()); // تصفية السجلات لتكون خاصة بالمستخدم الحالي
+}
+
 }

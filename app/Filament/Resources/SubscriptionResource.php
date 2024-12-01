@@ -46,20 +46,38 @@ class SubscriptionResource extends Resource
                 Tables\Columns\TextColumn::make('device.nickname')
                     ->label('Device')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('plan.title')
-                    ->label('Plan')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('start_date')
+                    Tables\Columns\TextColumn::make('start_date')
                     ->label('Start Date')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->color('success'), // إضافة لون
+                
+                Tables\Columns\BadgeColumn::make('plan.title')
+                    ->label('Plan')
+                    ->colors([
+                        'primary' => 'Basic Plan',
+                        'success' => 'Premium Plan',
+                        'danger' => 'Trial Plan',
+                    ]),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created At')
                     ->dateTime()
                     ->sortable(),
             ])
             ->filters([
-                // يمكن إضافة فلاتر إذا لزم الأمر
+                Tables\Filters\Filter::make('start_date')
+    ->form([
+        Forms\Components\DatePicker::make('start_date_from')
+            ->label('From'),
+        Forms\Components\DatePicker::make('start_date_to')
+            ->label('To'),
+    ])
+    ->query(function ($query, $data) {
+        return $query
+            ->when($data['start_date_from'], fn ($q) => $q->where('start_date', '>=', $data['start_date_from']))
+            ->when($data['start_date_to'], fn ($q) => $q->where('start_date', '<=', $data['start_date_to']));
+    }),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -82,4 +100,11 @@ class SubscriptionResource extends Resource
             'edit' => Pages\EditSubscription::route('/{record}/edit'),
         ];
     }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+{
+    return parent::getEloquentQuery()
+        ->where('user_id', auth()->id()); // عرض الاشتراكات الخاصة بالمستخدم الحالي فقط
+}
+
 }
