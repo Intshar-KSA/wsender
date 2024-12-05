@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Events\DeviceCreated;
-use App\Listeners\ActivateFreePlanForDevice;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
+use App\Listeners\ActivateFreePlanForDevice;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,7 +25,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
-
+        Filament::serving(function () {
+            // التأكد من توثيق المستخدم
+            Route::middleware(['verified'])->group(function () {
+                // باقي تعريفات Filament
+            });
+        });
 // Event::listen(
 //     DeviceCreated::class,
 //     ActivateFreePlanForDevice::class

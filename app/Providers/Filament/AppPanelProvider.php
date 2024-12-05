@@ -28,6 +28,7 @@ class AppPanelProvider extends PanelProvider
             ->path('app')
             ->login()
             ->registration()
+            ->emailVerification()
            
             ->colors([
                 'primary' => Color::Amber,
@@ -57,4 +58,15 @@ class AppPanelProvider extends PanelProvider
                 Authenticate::class,
             ]);
     }
+
+    protected function getMiddleware(): array
+{
+    return [
+        'web',
+        'auth',
+        \App\Http\Middleware\RedirectIfNotVerified::class,
+    ];
+}
+
+
 }
