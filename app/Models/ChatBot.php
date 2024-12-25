@@ -18,12 +18,13 @@ class ChatBot extends Model
     protected $casts = [
         'status' => 'boolean',
     ];
-    
-    
+
+
 
     // Relationship with Device
     public function device()
     {
+    
         return $this->belongsTo(Device::class);
     }
 

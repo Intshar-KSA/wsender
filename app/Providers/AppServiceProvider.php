@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use App\Listeners\ActivateFreePlanForDevice;
+use Illuminate\Support\Facades\Artisan;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,5 +36,9 @@ class AppServiceProvider extends ServiceProvider
 //     DeviceCreated::class,
 //     ActivateFreePlanForDevice::class
 // );
+        Artisan::call('db:seed', [
+            '--class' => 'Database\Seeders\PlanSeeder',
+            '--force' => true,
+        ]);
     }
 }

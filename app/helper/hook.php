@@ -15,11 +15,7 @@ $database = "gstm";
 
 //echo getUserById( $_SESSION['current_user_id'] )['name'];
 
-
-
-
 $data = file_get_contents("php://input");
-
 
 $event = json_decode($data, true);
 if(isset($event)){
@@ -28,163 +24,40 @@ if(isset($event)){
     $data =json_encode($event)."\n";
     //file_put_contents($file, $data, FILE_APPEND | LOCK_EX);
 
-
     //print_r($data);
 
-
     $chat_id = $event['messages'][0]['chatId'];
-$message = $event['messages'][0]['body'];
-$profile_id = $event['messages'][0]['profile_id'];
+    $message = $event['messages'][0]['body'];
+    $profile_id = $event['messages'][0]['profile_id'];
+    $is_me = $event['messages'][0]['is_me'];
+    $from_user = $event['messages'][0]['from'];
+    $to_user = $event['messages'][0]['to'];
 
-$is_me = $event['messages'][0]['is_me'];
-$from_user = $event['messages'][0]['from'];
-$to_user = $event['messages'][0]['to'];
+    if($message=="chat_id"){
+        $result = send_with_wapi('40703bb7812b727ec01c24f2da518c407342559c', 'aedd0dc2-8453',$chat_id, $chat_id);
+    }
 
+    $userInfo= getUserByUserProfile($profile_id);
+    if ($userInfo !== null) {
+        $user_name= $userInfo['name'];
+        $token= $userInfo['token'];
+        $sheet_url= $userInfo['sheet_url'];
+        $sheet_id=getSheetIdFromUrl($sheet_url);
 
+        if(!$is_me) {
+            get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$message,$chat_id );
+        }
 
+        if($is_me && $from_user==$to_user) {
+            get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$message,$chat_id );
+        }
 
-
-
-
-
-/*
-
-
-
- if($is_me == "true" && $from==$to )
-{
-    get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$message,$chat_id );
-
-}
-else{
-
-
-    if($is_me=="false"){
-
-        get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$message,$chat_id );
-
+    } else {
+        echo "User not found.";
     }
 }
 
-
-
-*/
-
-
-
-
-
-if($message=="chat_id"){
-
-
-
-    $result = send_with_wapi('40703bb7812b727ec01c24f2da518c407342559c', 'aedd0dc2-8453',$chat_id, $chat_id);
-
-
-
-
-
-}
-
-//$result = send_with_wapi('40703bb7812b727ec01c24f2da518c407342559c', 'aedd0dc2-8453', '966568430828@c.us',$profile_id);
-
-//echo print_r($result) ;
-
-
-
-$userInfo= getUserByUserProfile($profile_id);
-
-if ($userInfo !== null) {
-$user_name= $userInfo['name'];
-$token= $userInfo['token'];
-$sheet_url= $userInfo['sheet_url'];
- $sheet_id=getSheetIdFromUrl($sheet_url);
-
- //$result = send_with_wapi('40703bb7812b727ec01c24f2da518c407342559c', 'aedd0dc2-8453', '966568430828@c.us', $sheet_id);
-
- echo $user_name,'', $sheet_id,'', $sheet_id;
-
-
-
-
-
-
-
-
- if(!$is_me)
-{
-    get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$message,$chat_id );
-}
-
-
-
-if($is_me && $from_user==$to_user)
-{
-
-    get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$message,$chat_id );
-}
-
-
-
-
-
-
-
-
-
-
-
-//get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$message,$chat_id );
-
-
-
-} else {
-    echo "User not found.";
-}
-
-
-
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function send_with_wapi($auth, $profileId, $phone, $message) {
-
-
-
-
-
-
-
-
-
     $curl = curl_init();
 
     curl_setopt_array($curl, array(
@@ -207,26 +80,9 @@ function send_with_wapi($auth, $profileId, $phone, $message) {
 
     curl_close($curl);
     echo $response;
+}
 
-
-
-
-
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
- function getUserByUserProfile($profile_id) {
+function getUserByUserProfile($profile_id) {
     // Database connection details
     global $servername;
     global $username ;
@@ -263,11 +119,6 @@ function send_with_wapi($auth, $profileId, $phone, $message) {
     $conn->close();
 }
 
-
-
-
-
-
 function getSheetIdFromUrl($url) {
     $parts = parse_url($url);
     $path = explode('/', $parts['path']);
@@ -275,16 +126,11 @@ function getSheetIdFromUrl($url) {
     return $id;
 }
 
-
-
 function get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$message,$chat_id )
 {
-
     //$result = send_with_wapi($token, $profile_id, $chat_id ,'form sheet');
 
-
     $url = 'https://opensheet.elk.sh/'.$sheet_id.'/Sheet1';
-
 
     try {
         $response = file_get_contents($url);
@@ -293,7 +139,6 @@ function get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$mess
             // Parse the response as JSON
 
             $data = json_decode($response, true);
-
 
             //$first_object = reset($data);
 
@@ -304,72 +149,31 @@ function get_sheet_msgs($sheet_id,$user_name,$profile_id,$token,$sheet_url,$mess
                 //$b = str_replace(' ', '', $b);
                 $first_replay = $b;
 
-break;
-
+                break;
             }
-
-
-
-
-
-
 
             $restart_bot=get_last_message_date_if_more_than_one_hour($profile_id,$token,$chat_id);
 
-//&& strpos($chat_id,"@c.us") !== false
+            //&& strpos($chat_id,"@c.us") !== false
             if($restart_bot && strpos($chat_id,"@c.us") !== false ){
-
-
-
                 //$result = send_with_wapi($token, $profile_id, $chat_id , 'started');
                 //$result = send_with_wapi($token, $profile_id, $chat_id , 'started');
                 //$result = send_with_wapi($token, $profile_id, $chat_id , 'started');
-try{
-    $result = send_with_wapi($token, $profile_id, $chat_id , $first_replay."" );
-
-        }catch(Exception $e){
-
-            $result = send_with_wapi($token, $profile_id, $chat_id ,$e->getMessage()."eception" );
-
-
-        }
-
-
-        //$result = send_with_wapi($token, $profile_id, $chat_id , 'started 5');
-
-
-            }
-            else{
-
+                try{
+                    $result = send_with_wapi($token, $profile_id, $chat_id , $first_replay."" );
+                }catch(Exception $e){
+                    $result = send_with_wapi($token, $profile_id, $chat_id ,$e->getMessage()."eception" );
+                }
+                //$result = send_with_wapi($token, $profile_id, $chat_id , 'started 5');
+            } else {
                 //$result = send_with_wapi($token, $profile_id, $chat_id ,"not started".$restart_bot);
-
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             if ($data !== null) {
                 // Loop through the rows and display key-value pairs
                 foreach ($data as $row) {
-
-
-
                     $a = $row['a'];
                     $b = $row['b'];
-
 
                     $a = str_replace("\n", "\\n", $a);
                     $b = str_replace("\n", "\\n", $b);
@@ -377,44 +181,15 @@ try{
                     echo $a."<br>";
                     echo $b."<br>";
 
-
                     $a = str_replace(' ', '', $a);
                     $message = str_replace(' ', '', $message);
 
-                    /*
-
-                    $restart_bot=get_last_message_date_if_more_than_one_hour($profile_id,$token,$chat_id);
-
-//&& strpos($chat_id,"@c.us") !== false
-                    if($restart_bot ){
-
-                        $result = send_with_wapi($token, $profile_id, $chat_id ,"bot started from 0 ");
-
-                    }
-                    else{
-                        $result = send_with_wapi($token, $profile_id, $chat_id ,"bot  not started from 0 ");
-
-                    }
-                        */
-
-
                     if($message==$a){
-
                         //$result = send_with_wapi('40703bb7812b727ec01c24f2da518c407342559c', 'aedd0dc2-8453', '966568430828@c.us',$b);
-
                         $result = send_with_wapi($token, $profile_id, $chat_id ,$b);
                         //echo print_r($result) ;
-
                     }
-
-
-
-
-
                 }
-
-
-
             } else {
                 // Handle JSON parsing error
                 throw new Exception('Failed to parse the JSON response.');
@@ -427,40 +202,5 @@ try{
         // Handle exceptions
         //echo 'Error: ' . $e->getMessage();
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-/*
-
-$userInfo= getUserByUserProfile("aedd0dc2-8453");
-
-if ($userInfo !== null) {
-$user_name= $userInfo['name'];
-$token= $userInfo['token'];
-$sheet_url= $userInfo['sheet_url'];
- $sheet_id=getSheetIdFromUrl($sheet_url);
-
-
-
- echo $user_name,'', $sheet_id,'', $sheet_id,
-
-get_sheet_msgs($sheet_id,$user_name,$token,$sheet_url,$message);
-
-} else {
-    echo "User not found.";
-}
-
-
-*/
-
-
 ?>

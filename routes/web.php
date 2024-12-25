@@ -2,7 +2,7 @@
 
 use App\Filament\Pages\ViewQrCode;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\WebhookController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
@@ -12,6 +12,8 @@ Route::get('/', function () {
 
 // Route::get('/filament/view-qr-code/{qrCodeUrl}', ViewQrCode::class)->name('filament.pages.view-qr-code');
 Route::get('/filament/view-qr-code/{qrCodeText}', ViewQrCode::class)->name('filament.pages.view-qr-code');
+
+Route::post('/webhook', [WebhookController::class, 'handle']);
 
 
 
