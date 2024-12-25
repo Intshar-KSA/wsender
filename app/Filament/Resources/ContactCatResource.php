@@ -29,7 +29,7 @@ class ContactCatResource extends Resource
                     ->label('Category Name'),
                     Forms\Components\Hidden::make('user_id')
                     ->default(auth()->id()),
-                
+
                 // Forms\Components\Select::make('user_id')
                 //     ->relationship('user', 'name')
                 //     ->searchable()
@@ -71,7 +71,7 @@ class ContactCatResource extends Resource
     public static function getRelations(): array
     {
         return [
-            ContactsRelationManager::class,
+            // ContactsRelationManager::class,
 
         ];
     }
@@ -91,6 +91,6 @@ class ContactCatResource extends Resource
             ->where('user_id', auth()->id()) // تصفية السجلات الخاصة بالمستخدم الحالي
             ->with('user'); // تحميل العلاقة مع المستخدم
     }
-    
+
 
 }

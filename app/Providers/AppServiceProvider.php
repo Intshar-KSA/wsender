@@ -25,12 +25,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
-        Filament::serving(function () {
-            // التأكد من توثيق المستخدم
-            Route::middleware(['verified'])->group(function () {
-                // باقي تعريفات Filament
-            });
-        });
+        // Filament::serving(function () {
+        //     // التأكد من توثيق المستخدم
+        //     Route::middleware(['verified'])->group(function () {
+        //         // باقي تعريفات Filament
+        //     });
+        // });
 // Event::listen(
 //     DeviceCreated::class,
 //     ActivateFreePlanForDevice::class
