@@ -49,22 +49,27 @@ Route::post('/optimize-project', function (Request $request) {
 });
 
 // مسار جديد ليكون وسيط بين الطلبات
-Route::post('/sync/message/send', function (Request $request) {
-    $profile_id = $request->query('profile_id');
-    $body = $request->input('body');
-    $recipient = $request->input('recipient');
-    $headers = [
-        'accept' => 'application/json',
-        'Authorization' => '40703bb7812b727ec01c24f2da518c407342559c',
-        'Content-Type' => 'application/json',
-    ];
+// Route::post('/sync/message/send', function (Request $request) {
+//     $profile_id = $request->query('profile_id');
+//     $body = $request->input('body');
+//     $recipient = $request->input('recipient');
+//     $headers = [
+//         'accept' => 'application/json',
+//         'Authorization' => '40703bb7812b727ec01c24f2da518c407342559c',
+//         'Content-Type' => 'application/json',
+//     ];
 
-    $response = Http::withHeaders($headers)->post("https://wappi.pro/api/sync/message/send?profile_id={$profile_id}", [
-        'body' => $body,
-        'recipient' => $recipient,
-    ]);
+//     $response = Http::withHeaders($headers)->post("https://wappi.pro/api/sync/message/send?profile_id={$profile_id}", [
+//         'body' => $body,
+//         'recipient' => $recipient,
+//     ]);
 
-    return response()->json($response->json(), $response->status());
-});
+//     return response()->json($response->json(), $response->status());
+// });
 
 
+
+use App\Http\Controllers\ProxyController;
+
+Route::any('/{any}', [ProxyController::class, 'handle'])
+    ->where('any', '.*');
