@@ -14,6 +14,8 @@ class SubscriptionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
+    protected static ?int $navigationSort = 8;
+
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form
@@ -51,7 +53,7 @@ class SubscriptionResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->color('success'), // إضافة لون
-                
+
                 Tables\Columns\BadgeColumn::make('plan.title')
                     ->label('Plan')
                     ->colors([

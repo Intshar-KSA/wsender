@@ -18,6 +18,7 @@ class ContentResource extends Resource
     protected static ?string $model = Content::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?int $navigationSort = 6;
     public static function form(Form $form): Form
     {
         return $form
@@ -92,7 +93,7 @@ class ContentResource extends Resource
                     'text' => 'Text', // النوع الجديد
                 ])
                 ->label('Filter by File Type'),
-            
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

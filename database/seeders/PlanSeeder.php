@@ -9,6 +9,7 @@ class PlanSeeder extends Seeder
 {
     public function run(): void
     {
+        try{
         if (Plan::count() == 0) {
             Plan::create([
                 'title' => 'Free Plan',
@@ -42,5 +43,8 @@ class PlanSeeder extends Seeder
                 'price' => 900,
             ]);
         }
+    } catch (\Exception $e) {
+        echo $e->getMessage();
     }
+}
 }

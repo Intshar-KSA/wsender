@@ -39,13 +39,40 @@ class Subscription extends Model
 
 
 
-    // دالة لحساب تاريخ انتهاء الاشتراك
+    // // دالة لحساب تاريخ انتهاء الاشتراك
+    // public function getExpirationDate()
+    // {
+    //     return $this->start_date
+    //     ? $this->start_date->copy()->addHours($this->plan->hours ?? 0)
+    //     : null;
+    // }
+
     public function getExpirationDate()
-    {
-        return $this->start_date
-        ? $this->start_date->copy()->addHours($this->plan->hours ?? 0)
-        : null;
+{
+    // إذا كان تاريخ البدء غير موجود
+    if (!$this->start_date) {
+        return null;
     }
+
+    $expirationDate = $this->start_date->copy(); // نسخ تاريخ البداية
+
+    // إذا كانت الخطة مجانية، يتم الحساب بالساعات
+    if ($this->plan->is_free) {
+        if (!empty($this->plan->hours)) {
+            $expirationDate->addHours($this->plan->hours);
+        }
+    } else {
+        // إذا كانت الخطة مدفوعة، يتم الحساب بالأيام
+        if (!empty($this->plan->number_of_days)) {
+            $expirationDate->addDays($this->plan->number_of_days);
+        }
+    }
+
+    return $expirationDate;
+}
+
+
+
 
     // دالة لمعرفة إذا كان الاشتراك منتهيًا
     public function isExpired(): bool

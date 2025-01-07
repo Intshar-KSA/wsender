@@ -80,6 +80,11 @@ class UserResource extends Resource
             //
         ];
     }
+    // public static function canAccess(): bool
+    // {
+    //     // تحقق من دور المستخدم
+    //     return auth()->user()->hasRole('user'); // يعرض المورد فقط إذا كان الدور Admin
+    // }
 
     public static function getPages(): array
     {

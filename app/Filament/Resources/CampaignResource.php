@@ -16,6 +16,9 @@ class CampaignResource extends Resource
     protected static ?string $model = Campaign::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+
+    protected static ?int $navigationSort = 4;
+
     public static function form(Form $form): Form
     {
         return $form
@@ -155,7 +158,7 @@ class CampaignResource extends Resource
                         }
                     }),
             ])
-            
+
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
@@ -179,7 +182,7 @@ class CampaignResource extends Resource
             'edit' => Pages\EditCampaign::route('/{record}/edit'),
         ];
     }
-  
+
     public static function getEloquentQuery(): Builder
 {
     return parent::getEloquentQuery()

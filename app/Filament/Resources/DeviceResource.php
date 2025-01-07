@@ -41,8 +41,9 @@ class DeviceResource extends Resource
                     Forms\Components\Toggle::make('status')
                     ->label('Active Status')
                     ->default(false) // افتراضيًا غير نشط
-                    ->inline(false),
-    
+                    ->inline(false)
+                    ->disabled(true),
+
             ]);
     }
 
@@ -57,7 +58,7 @@ class DeviceResource extends Resource
                     Tables\Columns\BooleanColumn::make('status')
                     ->label('Active')
                     ->sortable(),
-               
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -66,6 +67,33 @@ class DeviceResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
+
+                    Tables\Columns\TextColumn::make('remaining_time')
+    ->label('Time Remaining')
+    ->getStateUsing(function (Device $record) {
+        // الحصول على الاشتراك النشط
+        $activeSubscription = $record->subscriptions()
+            ->where('start_date', '<=', now()) // الاشتراك بدأ
+            ->latest('start_date') // أحدث اشتراك
+            ->first();
+
+        if ($activeSubscription) {
+            // حساب تاريخ انتهاء الاشتراك باستخدام الدالة
+            $expirationDate = $activeSubscription->getExpirationDate();
+
+            if ($expirationDate && now()->lessThan($expirationDate)) {
+                // حساب الفرق بين الآن وتاريخ الانتهاء وعرضه بصيغة بشرية
+                return now()->diffForHumans($expirationDate, ['parts' => 2, 'syntax' => \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW]);
+            }
+
+            return 'Expired'; // الاشتراك منتهي
+        }
+
+        return 'No Active Subscription'; // لا يوجد اشتراك نشط
+    })
+    ->sortable(),
+
             ])
             ->filters([
                 \Filament\Tables\Filters\SelectFilter::make('subscriptions.plan_id')
@@ -81,8 +109,8 @@ class DeviceResource extends Resource
                 //     ->pluck('plan.title', 'plan.id')
                 //     ->toArray();
                 // })
-            
-                
+
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

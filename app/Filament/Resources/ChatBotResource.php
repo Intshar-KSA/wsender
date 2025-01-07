@@ -18,6 +18,7 @@ class ChatBotResource extends Resource
     protected static ?string $model = ChatBot::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?int $navigationSort = 7;
     public static function form(Form $form): Form
     {
         return $form
@@ -28,7 +29,7 @@ class ChatBotResource extends Resource
                 })
                 ->required()
                 ->label('Device'),
-            
+
                 Forms\Components\Textarea::make('msg')
                     ->required()
                     ->columnSpanFull()
@@ -39,7 +40,7 @@ class ChatBotResource extends Resource
                     })
                     ->required()
                     ->label('Replay'),
-                
+
                 Forms\Components\Select::make('type')
                     ->options([
                         'exact' => 'Exact',
@@ -53,9 +54,9 @@ class ChatBotResource extends Resource
     ->offColor('danger')
     ->label('Status'),
 
-              
-                   
-                
+
+
+
             ]);
     }
 
@@ -74,7 +75,7 @@ class ChatBotResource extends Resource
                 Tables\Columns\TextColumn::make('type')
                     ->label('Match Type')
                     ->sortable(),
-              
+
                     Tables\Columns\ToggleColumn::make('status')
                     ->label('Status')
                     ->onColor('success')
@@ -103,8 +104,8 @@ class ChatBotResource extends Resource
                         ->toArray();
                 })
                 ->searchable(),
-            
-                
+
+
                 SelectFilter::make('content_id')
                 ->label('Replay')
                 ->options(function () {
@@ -113,14 +114,14 @@ class ChatBotResource extends Resource
                         ->toArray();
                 })
                 ->searchable(),
-            
+
                 SelectFilter::make('type')
                     ->options([
                         'exact' => 'Exact',
                         'contains' => 'Contains',
                     ])
                     ->label('Match Type'),
-                
+
                 SelectFilter::make('status')
                     ->options([
                         'on' => 'On',

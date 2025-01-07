@@ -17,6 +17,8 @@ class ContactResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
+    protected static ?int $navigationSort = 3;
+
     public static function form(Form $form): Form
     {
         return $form
@@ -35,8 +37,8 @@ class ContactResource extends Resource
                 Forms\Components\Hidden::make('user_id')
                 ->default(auth()->id())
                 ->required(),
-            
-            
+
+
                 Forms\Components\Select::make('contact_cat_id')
                 ->relationship('contactCat', 'name', fn (Builder $query) => $query->where('user_id', auth()->id())) // تصفية الفئات بناءً على المستخدم الحالي
                 ->searchable()
