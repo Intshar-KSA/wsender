@@ -54,7 +54,7 @@ class ContentResource extends Resource
                 Forms\Components\FileUpload::make('file')
                     ->label('Upload File')
                     ->directory('uploads/contents')
-                    ->nullable()
+                    ->required()
                     ->visible(fn (callable $get) => $get('file_type') !== 'text') // إظهار فقط إذا لم يكن النوع نصًا
                     ->imagePreviewHeight('100') // معاينة الصور
                     ->enableDownload() // تفعيل تنزيل الملفات
