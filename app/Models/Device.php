@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Device extends Model
 {
@@ -21,7 +22,7 @@ class Device extends Model
     {
         return $this->belongsTo(User::class);
     }
- 
+
     // Relationship with Subscriptions
     public function subscriptions()
     {
@@ -39,4 +40,13 @@ class Device extends Model
     {
         return $this->hasMany(ChatBot::class);
     }
+
+
+
+    protected static function booted()
+{
+    static::addGlobalScope('current_user_devices', function (Builder $builder) {
+        $builder->where('user_id', auth()->id());
+    });
+}
 }

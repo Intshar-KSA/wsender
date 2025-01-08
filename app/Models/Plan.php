@@ -39,4 +39,5 @@ class Plan extends Model
     });
 }
 
+
 }

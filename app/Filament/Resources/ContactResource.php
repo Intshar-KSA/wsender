@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\Contact;
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\Contact;
 use Filament\Forms\Form;
+use App\Models\ContactCat;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use App\Filament\Resources\ContactResource\Pages;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\ContactResource\Pages;
 
 class ContactResource extends Resource
 {
@@ -25,6 +26,7 @@ class ContactResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
+                    ->default('Unknown')
                     ->label('Contact Name'),
                 Forms\Components\TextInput::make('phone')
                     ->required()
@@ -52,41 +54,43 @@ class ContactResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Contact Name'),
-                Tables\Columns\TextColumn::make('phone')->label('Phone'),
-                Tables\Columns\TextColumn::make('user.name')->label('User'),
-                Tables\Columns\TextColumn::make('contactCat.name')->label('Category'),
-                Tables\Columns\TextColumn::make('created_at')->dateTime()->label('Created At'),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Name')
+                    ->sortable()
+                    ->searchable(), // السماح بالبحث في الاسم
+
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('Phone Number')
+                    ->sortable()
+                    ->searchable(), // السماح بالبحث في رقم الهاتف
+
+                Tables\Columns\TextColumn::make('contactCat.name')
+                    ->label('Category')
+                    ->sortable()
+                    ->searchable(), // السماح بالبحث في التصنيف
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created At')
+                    ->dateTime()
+                    ->sortable(), // السماح بترتيب تاريخ الإنشاء
             ])
             ->filters([
-                // Tables\Filters\SelectFilter::make('contact_cat_id')
-                // ->label('Category')
-                // ->options(fn () => \App\Models\ContactCat::pluck('name', 'id')->toArray())
-                // ->query(function ($query, $state) {
-                //     return $query->where('contact_cat_id', $state);
-                // }),
-                // Tables\Filters\Filter::make('By User')
-                //     ->form([
-                //         Forms\Components\Select::make('user_id')
-                //             ->relationship('user', 'name')
-                //             ->searchable()
-                //             ->label('User'),
-                //     ])
-                //     ->query(function ($query, array $data) {
-                //         return $query->where('user_id', $data['user_id']);
-                //     }),
-                // Tables\Filters\Filter::make('By Category')
-                //     ->form([
-                //         Forms\Components\Select::make('contact_cat_id')
-                //             ->relationship('contactCat', 'name')
-                //             ->searchable()
-                //             ->label('Category'),
-                //     ])
-                //     ->query(function ($query, array $data) {
-                //         return $query->where('contact_cat_id', $data['contact_cat_id']);
-                //     }),
+                Tables\Filters\SelectFilter::make('contact_cat_id')
+                    ->label('Filter by Category')
+
+                    ->options(ContactCat::pluck('name', 'id')->toArray()), // إضافة فلتر حسب التصنيف
+
+                Tables\Filters\TrashedFilter::make(), // دعم الفلترة للعناصر المحذوفة إذا كنت تستخدم Soft Deletes
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(), // زر التعديل
+                Tables\Actions\DeleteAction::make(), // زر الحذف
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make(), // الحذف الجماعي
             ]);
     }
+
 
     public static function getRelations(): array
     {
@@ -99,6 +103,8 @@ class ContactResource extends Resource
             'index' => Pages\ListContacts::route('/'),
             'create' => Pages\CreateContact::route('/create'),
             'edit' => Pages\EditContact::route('/{record}/edit'),
+            'bulk-create' => Pages\BulkCreateContacts::route('/bulk-create'),
+
         ];
     }
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder

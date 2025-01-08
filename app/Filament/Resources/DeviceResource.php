@@ -3,26 +3,25 @@
 namespace App\Filament\Resources;
 
 // use livewire ;
-use Filament\Forms;
-use Filament\Tables;
-use App\Models\Device;
-use Livewire\Livewire;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-use Filament\Facades\Filament;
-use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use App\Services\ExternalApiService;
-use Filament\Notifications\Notification;
 use App\Filament\Resources\DeviceResource\Pages;
-use Illuminate\Database\Eloquent\Builder; // استيراد النوع الصحيح
-
+use App\Models\Device;
+use App\Services\ExternalApiService;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Livewire\Livewire; // استيراد النوع الصحيح
 
 class DeviceResource extends Resource
 {
     protected static ?string $model = Device::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
     protected static ?int $navigationSort = -2;
 
     public static function form(Form $form): Form
@@ -38,8 +37,9 @@ class DeviceResource extends Resource
                 Forms\Components\TextInput::make('webhook_url')
                     ->maxLength(255)
                     ->default(null),
-                    Forms\Components\Toggle::make('status')
+                Forms\Components\Toggle::make('status')
                     ->label('Active Status')
+                    ->hidden()
                     ->default(false) // افتراضيًا غير نشط
                     ->inline(false)
                     ->disabled(true),
@@ -55,7 +55,7 @@ class DeviceResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('webhook_url')
                     ->searchable(),
-                    Tables\Columns\BooleanColumn::make('status')
+                Tables\Columns\BooleanColumn::make('status')
                     ->label('Active')
                     ->sortable(),
 
@@ -68,38 +68,46 @@ class DeviceResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-
                     Tables\Columns\TextColumn::make('remaining_time')
-    ->label('Time Remaining')
-    ->getStateUsing(function (Device $record) {
-        // الحصول على الاشتراك النشط
-        $activeSubscription = $record->subscriptions()
-            ->where('start_date', '<=', now()) // الاشتراك بدأ
-            ->latest('start_date') // أحدث اشتراك
-            ->first();
+                    ->label('Time Remaining')
+                    ->badge()
+                    ->getStateUsing(function (Device $record) {
+                        // الحصول على الاشتراك النشط
+                        $activeSubscription = $record->subscriptions()
+                            ->where('start_date', '<=', now()) // الاشتراك بدأ
+                            ->latest('start_date') // أحدث اشتراك
+                            ->first();
 
-        if ($activeSubscription) {
-            // حساب تاريخ انتهاء الاشتراك باستخدام الدالة
-            $expirationDate = $activeSubscription->getExpirationDate();
+                        if ($activeSubscription) {
+                            // حساب تاريخ انتهاء الاشتراك باستخدام الدالة
+                            $expirationDate = $activeSubscription->getExpirationDate();
 
-            if ($expirationDate && now()->lessThan($expirationDate)) {
-                // حساب الفرق بين الآن وتاريخ الانتهاء وعرضه بصيغة بشرية
-                return now()->diffForHumans($expirationDate, ['parts' => 2, 'syntax' => \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW]);
-            }
+                            if ($expirationDate && now()->lessThan($expirationDate)) {
+                                $remainingDays = now()->diffInDays($expirationDate);
 
-            return 'Expired'; // الاشتراك منتهي
-        }
+                                return $remainingDays > 0
+                                    ? (round($remainingDays)) . ' days remaining'
+                                    : 'Less than a day remaining';
+                            }
 
-        return 'No Active Subscription'; // لا يوجد اشتراك نشط
-    })
-    ->sortable(),
+                            return 'Expired'; // الاشتراك منتهي
+                        }
 
-            ])
+                        return 'No Active Subscription'; // لا يوجد اشتراك نشط
+                    })
+                    ->sortable()
+                    ->colors([
+                        'danger' => fn ($state) => $state === 'Expired' || $state === 'No Active Subscription',
+                        'warning' => fn ($state) => is_numeric($state) && $state <= 5, // أقل من 5 أيام
+                        'success' => fn ($state) => is_numeric($state) && $state > 5,  // أكثر من 5 أيام
+                    ]),
+
+                    ])
             ->filters([
                 \Filament\Tables\Filters\SelectFilter::make('subscriptions.plan_id')
-                ->label('Plan')
-                ->relationship('subscriptions', 'plan_id')
-                ->options(fn () => \App\Models\Plan::pluck('title', 'id')->toArray()),
+                    ->label('Plan')
+                    ->relationship('subscriptions', 'plan_id')
+                    ->options(fn () => \App\Models\Plan::pluck('title', 'id')->toArray()),
                 // Tables\Filters\SelectFilter::make('subscriptions.plan_id')
                 // ->label('Plan')
                 // ->options(function () {
@@ -109,7 +117,6 @@ class DeviceResource extends Resource
                 //     ->pluck('plan.title', 'plan.id')
                 //     ->toArray();
                 // })
-
 
             ])
             ->actions([
@@ -147,63 +154,42 @@ class DeviceResource extends Resource
                     }),
                     Action::make('viewQrCode')
                     ->label('عرض QR Code')
-                    // ->icon('heroicon-o-view-list')
-                    ->action(function ($record,$livewire) {
-                        $apiService = app(ExternalApiService::class);
+                    ->action(function ($record, $livewire) {
+                        // التحقق من حالة الاشتراك
+                        $activeSubscription = $record->subscriptions()
+                            ->where('start_date', '<=', now())
+                            ->latest('start_date')
+                            ->first();
+
+                        if ($activeSubscription) {
+                            $expirationDate = $activeSubscription->getExpirationDate();
+
+                            if (!$expirationDate || now()->greaterThanOrEqualTo($expirationDate)) {
+                                // الاشتراك منتهي
+                                Notification::make()
+                                    ->title('انتهاء الاشتراك')
+                                    ->body('انتهى اشتراك الجهاز. يُرجى الاشتراك من جديد.')
+                                    ->warning()
+                                    ->send();
+                                return;
+                            }
+                        } else {
+                            // لا يوجد اشتراك نشط
+                            Notification::make()
+                                ->title('لا يوجد اشتراك نشط')
+                                ->body('هذا الجهاز ليس لديه اشتراك نشط. يُرجى الاشتراك لتتمكن من عرض QR Code.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        // إذا كان الاشتراك صالحًا، عرض رمز QR
                         $qrCodeText = $record->profile_id;
-
-                        // تكوين رابط الـ QR Code كصورة
-                        // $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrCodeText);
-
                         $encodedUrl = urlencode($qrCodeText);
+
                         return redirect()->route('filament.pages.view-qr-code', ['qrCodeText' => $encodedUrl]);
-
-
-                    try {
-                        // استدعاء دالة الحصول على QR Code
-                        // $response = $apiService->getQrCode($record->profile_id);
-
-                        // // التحقق من استجابة الـ API
-                        // if (!$response['success']) {
-                        //     throw new \Exception('Failed to fetch QR Code. Response: ' . json_encode($response));
-                        // }
-
-                        // $qrCodeText = $response['qr_code_text'];
-
-                        // عرض QR Code في نافذة Modal
-                        // Livewire::emitTo('qr-code-modal', 'openQrCodeModal', $qrCodeUrl);
-                        // $this->dispatchBrowserEvent('open-qr-code-modal', ['qrCodeUrl' => $qrCodeUrl]);
-                        // app('livewire')->dispatchBrowserEvent('open-qr-code-modal', ['qrCodeUrl' => $qrCodeUrl]);
-                        $script = <<<JS
-                        window.livewire.emit('openQrCodeModal', '$qrCodeUrl');
-                    JS;
-
-                     redirect()->route('filament.pages.view-qr-code', ['qrCodeUrl' => $qrCodeUrl]);
-
-                    // $livewire->emit('viewQrCode', $qrCodeUrl);
-                    // $dispatch('open-modal', { id: 'edit-user' });
-                    // $livewire = Livewire::with($dispatch('open-modal', { id: 'edit-user' }));
-                    // $livewire->dispatchBrowserEvent('open-qr-code-modal', ['qrCodeUrl' => $qrCodeUrl]);
-                    // $livewire->dispatchBrowserEvent('open-modal', [
-                    //     'title' => 'QR Code',
-                    //     'body' => "<img src='{$qrCodeUrl}' alt='QR Code' />",
-                    // ]);
-
-                    // إضافة السكربت إلى المحتوى
-                    // app('livewire')->dispatchBrowserEvent('open-qr-code-modal', ['qrCodeUrl' => $qrCodeUrl]);
-                    // $livewire->dispatchBrowserEvent('open-modal', ['id' => $record->id]);
-
-
-                    } catch (\Exception $e) {
-                        // التعامل مع الخطأ: تسجيله وعرض رسالة للمستخدم
-                        logger()->error($e->getMessage());
-                        Notification::make()
-                            ->title('Error')
-                            ->body('حدث خطأ أثناء جلب QR Code.'.$e->getMessage())
-                            ->danger()
-                            ->send();
-                    }
                     }),
+
             ])
 
             ->bulkActions([
@@ -252,9 +238,9 @@ class DeviceResource extends Resource
             throw new \Exception('Could not delete the record due to API error.');
         }
     }
-    public static function getEloquentQuery(): Builder
-{
-    return parent::getEloquentQuery()->where('user_id', auth()->id());
-}
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('user_id', auth()->id());
+    }
 }

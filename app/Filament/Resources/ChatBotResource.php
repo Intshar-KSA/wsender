@@ -8,33 +8,34 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class ChatBotResource extends Resource
 {
     protected static ?string $model = ChatBot::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?int $navigationSort = 7;
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Select::make('device_id')
-                ->relationship('user_device', 'nickname', function (Builder $query) {
-                    $query->where('user_id', auth()->id()); // تصفية الأجهزة لتكون خاصة بالمستخدم
-                })
-                ->required()
-                ->label('Device'),
+                    ->relationship('user_device', 'nickname', function (Builder $query) {
+                        $query->where('user_id', auth()->id()); // تصفية الأجهزة لتكون خاصة بالمستخدم
+                    })
+                    ->required()
+                    ->label('Device'),
 
                 Forms\Components\Textarea::make('msg')
                     ->required()
                     ->columnSpanFull()
                     ->label('Message'),
-                    Forms\Components\Select::make('content_id')
+                Forms\Components\Select::make('content_id')
                     ->relationship('content', 'title', function (Builder $query) {
                         $query->where('user_id', auth()->id()); // تصفية المحتويات لتكون خاصة بالمستخدم
                     })
@@ -48,14 +49,11 @@ class ChatBotResource extends Resource
                     ])
                     ->required()
                     ->label('Match Type'),
-                    Forms\Components\Toggle::make('status')
-    ->required()
-    ->onColor('success')
-    ->offColor('danger')
-    ->label('Status'),
-
-
-
+                Forms\Components\Toggle::make('status')
+                    ->required()
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->label('Status'),
 
             ]);
     }
@@ -76,7 +74,7 @@ class ChatBotResource extends Resource
                     ->label('Match Type')
                     ->sortable(),
 
-                    Tables\Columns\ToggleColumn::make('status')
+                Tables\Columns\ToggleColumn::make('status')
                     ->label('Status')
                     ->onColor('success')
                     ->offColor('danger')
@@ -97,23 +95,22 @@ class ChatBotResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('device_id')
-                ->label('Device')
-                ->options(function () {
-                    return \App\Models\Device::where('user_id', auth()->id())
-                        ->pluck('nickname', 'id')
-                        ->toArray();
-                })
-                ->searchable(),
-
+                    ->label('Device')
+                    ->options(function () {
+                        return \App\Models\Device::where('user_id', auth()->id())
+                            ->pluck('nickname', 'id')
+                            ->toArray();
+                    })
+                    ->searchable(),
 
                 SelectFilter::make('content_id')
-                ->label('Replay')
-                ->options(function () {
-                    return \App\Models\Content::where('user_id', auth()->id())
-                        ->pluck('title', 'id')
-                        ->toArray();
-                })
-                ->searchable(),
+                    ->label('Replay')
+                    ->options(function () {
+                        return \App\Models\Content::where('user_id', auth()->id())
+                            ->pluck('title', 'id')
+                            ->toArray();
+                    })
+                    ->searchable(),
 
                 SelectFilter::make('type')
                     ->options([

@@ -57,11 +57,11 @@ class QuickSendResource extends Resource
                 ->rows(3)
                 ->helperText('Enter phone numbers, one per line.'),
 
-            FileUpload::make('image')
+                FileUpload::make('image')
                 ->label('Upload Image')
                 ->image()
                 ->directory('uploads/images')
-                ->visibility('private')
+                ->visibility('public') // تغيير إلى public
                 ->helperText('Optional: Attach an image to your message.'),
 
             TextInput::make('timeout_from')
@@ -79,8 +79,9 @@ class QuickSendResource extends Resource
                 ->helperText('Maximum time delay for sending messages.'),
 
             TextInput::make('file_name')
-                ->default('картинка')
+                ->default('')
                 ->label('File Name')
+                ->hidden()
                 ->required()
                 ->helperText('Name of the uploaded file (default: картинка).'),
         ]);
@@ -101,12 +102,13 @@ public static function table(Table $table): Table
 
         TextColumn::make('phone_numbers')
             ->label('Phones')
-            ->limit(30),
+            ->limit(30)
+            ->copyable(),
 
-        BadgeColumn::make('status')
+            BadgeColumn::make('status')
             ->label('Status')
             ->colors([
-                'success' => 'resumed',
+                'success' => 'started',
                 'warning' => 'paused',
                 'danger' => 'failed',
                 'gray' => 'created',
@@ -123,19 +125,54 @@ public static function table(Table $table): Table
             ->dateTime()
             ->sortable(),
     ])->actions([
-        Action::make('pause')
-        ->label('Pause')
-        ->icon('heroicon-o-pause')
-        ->action(fn ($record) => QuickSendService::pauseCampaign($record))
+        Action::make('toggle_status')
+        ->label(fn ($record) => match ($record->status) {
+            'created' => 'Start',
+            'started' => 'Pause',
+            'paused' => 'Resume',
+            'resumed' => 'Pause',
+            default => 'Unknown', // للعرض الافتراضي
+        })
+        ->icon(fn ($record) => match ($record->status) {
+            'created' => 'heroicon-o-play',
+            'started' => 'heroicon-o-pause',
+            'paused' => 'heroicon-o-play',
+            'resumed' => 'heroicon-o-pause',
+            default => 'heroicon-o-question-mark-circle',
+        })
+        ->action(function ($record) {
+            try {
+                match ($record->status) {
+                    'created' => QuickSendService::startCampaign($record),
+                    'started' => QuickSendService::pauseCampaign($record),
+                    'paused' => QuickSendService::resumeCampaign($record),
+                    'resumed' => QuickSendService::pauseCampaign($record),
+                    default => throw new \Exception("Unhandled status: {$record->status}"),
+                };
+            } catch (\Exception $e) {
+                \Log::error("Error in campaign toggle: " . $e->getMessage());
+                throw $e; // إعادة رمي الاستثناء للتعامل معه في الواجهة
+            }
+        })
         ->requiresConfirmation()
-        ->successNotificationTitle('Campaign paused successfully.'),
+        ->successNotificationTitle(fn ($record) => match ($record->status) {
+            'created' => 'Campaign started successfully.',
+            'started' => 'Campaign paused successfully.',
+            'paused' => 'Campaign resumed successfully.',
+        }),
+    //     Action::make('pause')
+    //     ->label('Pause')
+    //     ->icon('heroicon-o-pause')
+    //     ->action(fn ($record) => QuickSendService::pauseCampaign($record))
+    //     ->requiresConfirmation()
+    //     ->successNotificationTitle('Campaign paused successfully.'),
 
-    Action::make('resume')
-        ->label('Resume')
-        ->icon('heroicon-o-play')
-        ->action(fn ($record) => QuickSendService::resumeCampaign($record))
-        ->requiresConfirmation()
-        ->successNotificationTitle('Campaign resumed successfully.'),
+    // Action::make('resume')
+    //     ->label('Resume')
+    //     ->icon('heroicon-o-play')
+    //     ->action(fn ($record) => QuickSendService::resumeCampaign($record))
+    //     ->requiresConfirmation()
+    //     ->successNotificationTitle('Campaign resumed successfully.'),
 
     Action::make('delete')
         ->label('Delete')
@@ -144,6 +181,10 @@ public static function table(Table $table): Table
         ->color('danger')
         ->requiresConfirmation()
         ->successNotificationTitle('Campaign deleted successfully.'),
+        ])
+        ->bulkActions([
+            Tables\Actions\DeleteBulkAction::make(),
+
         ]);
 }
 

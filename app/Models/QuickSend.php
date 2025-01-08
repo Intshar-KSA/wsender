@@ -18,5 +18,6 @@ class QuickSend extends Model
         'base64',
         'file_name',
         'status',
+        'mass_posting_id'
     ];
 }

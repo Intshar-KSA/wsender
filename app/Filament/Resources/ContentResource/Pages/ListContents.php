@@ -2,9 +2,12 @@
 
 namespace App\Filament\Resources\ContentResource\Pages;
 
-use App\Filament\Resources\ContentResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\ContactResource;
+use App\Filament\Resources\ContentResource;
+use Filament\Pages\Actions\Action;
+
 
 class ListContents extends ListRecords
 {
@@ -14,6 +17,9 @@ class ListContents extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+    
         ];
     }
+
+
 }

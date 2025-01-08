@@ -12,7 +12,7 @@ class ViewQrCode extends Page
 {
     protected static string $view = 'filament.pages.view-qr-code';
     protected static ?string $pollingInterval = '7s'; // يتم تحديث QR Code كل 7 ثوانٍ تلقائيًا
-    
+
     public string $qrCodeUrl;
     public string $qrCodeUrl2;
     public string $errorMessage;
@@ -38,27 +38,31 @@ class ViewQrCode extends Page
 
         try {
             $response = $apiService->getQrCode($qrCodeText);
-    
+
             if (isset($response['status']) && $response['status'] === 'done' && isset($response['qrCode'])) {
                 $this->qrCodeUrl = $response['qrCode'];
             } else {
-                // تحقق من رسالة الخطأ
-                if (isset($response['detail']) && $response['detail'] === 'You are already authorized') {
-                    // تحديث حالة الجهاز إلى "active"
+                if (isset($response['detail']) && $response['detail'] === 'Profile not found') {
+                    // إذا كان البروفايل غير موجود، أنشئ بروفايل جديد
+                    $this->handleProfileNotFound();
+                } else if (isset($response['detail']) && $response['detail'] === 'You are already authorized') {
                     $this->updateDeviceStatus('active');
                 } else {
                     $this->errorMessage = "عذرًا، لا يمكن إنشاء رمز QR في الوقت الحالي.";
                 }
             }
         } catch (Exception $e) {
-            // تحقق من الخطأ لتحديث الحالة إذا كانت الرسالة مطابقة
-            if (strpos($e->getMessage(), 'You are already authorized') !== false) {
+            if (strpos($e->getMessage(), 'Profile not found') !== false) {
+                // إذا كان البروفايل غير موجود، أنشئ بروفايل جديد
+                $this->handleProfileNotFound();
+            } else if (strpos($e->getMessage(), 'You are already authorized') !== false) {
                 $this->updateDeviceStatus('active');
             } else {
                 $this->errorMessage = "حدث خطأ أثناء محاولة إنشاء رمز QR: " . $e->getMessage();
             }
         }
     }
+
 
     public function closeQrCode()
     {
@@ -95,4 +99,44 @@ class ViewQrCode extends Page
     // اكتب هنا الكود الذي يقوم بتحديث حالة الجهاز إلى active
     // يمكنك استخدام موديل الجهاز وتحديد الجهاز المناسب لتحديث حالته
 }
+private function handleProfileNotFound()
+{
+    try {
+        $device = Device::where('profile_id', $this->qrCodeUrl2)->first();
+
+        if ($device) {
+            $apiService = app(ExternalApiService::class);
+
+            // إنشاء بروفايل جديد
+            $name = $device->nickname;
+            $webhookUrl = $device->webhook_url ?? '';
+            $newProfileResponse = $apiService->addProfile('', $name, $webhookUrl);
+
+            if (isset($newProfileResponse['status']) && $newProfileResponse['status'] === 'done') {
+                $newProfileId = $newProfileResponse['profile_id'];
+
+                // تحديث السجل بالبروفايل الجديد
+                $device->update(['profile_id' => $newProfileId]);
+
+                Notification::make()
+                    ->title('تم إنشاء بروفايل جديد وتحديث الجهاز بنجاح.')
+                    ->success()
+                    ->send();
+            } else {
+                throw new \Exception('Failed to create a new profile. Response: ' . json_encode($newProfileResponse));
+            }
+        } else {
+            throw new \Exception('Device not found in the database.');
+        }
+    } catch (Exception $e) {
+        \Log::error('Error handling profile not found: ' . $e->getMessage());
+        Notification::make()
+            ->title('حدث خطأ أثناء محاولة إنشاء بروفايل جديد.')
+            ->danger()
+            ->send();
+        $this->errorMessage = "حدث خطأ أثناء محاولة إنشاء بروفايل جديد: " . $e->getMessage();
+    }
+}
+
+
 }

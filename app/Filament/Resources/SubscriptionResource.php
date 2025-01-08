@@ -23,6 +23,8 @@ class SubscriptionResource extends Resource
                 Forms\Components\Select::make('user_id')
                     ->relationship('user', 'name')
                     ->label('User')
+                    ->default(auth()->id())
+                    ->disabled()
                     ->required(),
                 Forms\Components\Select::make('device_id')
                     ->relationship('device', 'nickname')
@@ -56,10 +58,36 @@ class SubscriptionResource extends Resource
 
                 Tables\Columns\BadgeColumn::make('plan.title')
                     ->label('Plan')
+                    ->badge()
                     ->colors([
                         'primary' => 'Basic Plan',
                         'success' => 'Premium Plan',
                         'danger' => 'Trial Plan',
+                    ]),
+
+                    Tables\Columns\TextColumn::make('remaining_time')
+                    ->label('Time Remaining')
+                    ->badge()
+                    ->getStateUsing(function (Subscription $record) {
+                        // حساب تاريخ انتهاء الاشتراك بناءً على الخطة
+                        $expirationDate = $record->getExpirationDate(); // تأكد من وجود دالة لحساب تاريخ الانتهاء
+
+                        if ($expirationDate && now()->lessThan($expirationDate)) {
+                            // حساب الفرق بين الآن وتاريخ الانتهاء
+                            $remainingDays = now()->diffInDays($expirationDate);
+
+                            return $remainingDays > 0
+                                ? (round($remainingDays)) . ' days remaining'
+                                : 'Less than a day remaining';
+                        }
+
+                        return 'Expired'; // الاشتراك منتهي
+                    })
+                    ->sortable()
+                    ->colors([
+                        'danger' => fn ($state) => $state === 'Expired',
+                        'warning' => fn ($state) => is_numeric($state) && $state <= 5, // أقل من 5 أيام
+                        'success' => fn ($state) => is_numeric($state) && $state > 5,  // أكثر من 5 أيام
                     ]),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created At')

@@ -19,6 +19,8 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Admin';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -80,11 +82,11 @@ class UserResource extends Resource
             //
         ];
     }
-    // public static function canAccess(): bool
-    // {
-    //     // تحقق من دور المستخدم
-    //     return auth()->user()->hasRole('user'); // يعرض المورد فقط إذا كان الدور Admin
-    // }
+    public static function canAccess(): bool
+    {
+        // تحقق من دور المستخدم
+        return auth()->user()->role === 'admin'; // يعرض المورد فقط إذا كان الدور Admin
+    }
 
     public static function getPages(): array
     {

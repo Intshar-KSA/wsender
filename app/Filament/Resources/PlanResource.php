@@ -13,6 +13,7 @@ class PlanResource extends Resource
     protected static ?string $model = Plan::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard';
+    protected static ?string $navigationGroup = 'Admin';
 
 
     public static function form(Forms\Form $form): Forms\Form
@@ -94,5 +95,11 @@ Tables\Columns\TextColumn::make('hours')
             'create' => Pages\CreatePlan::route('/create'),
             'edit' => Pages\EditPlan::route('/{record}/edit'),
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        // تحقق من دور المستخدم
+        return auth()->user()->role === 'admin'; // يعرض المورد فقط إذا كان الدور Admin
     }
 }

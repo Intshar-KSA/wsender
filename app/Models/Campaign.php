@@ -13,15 +13,19 @@ class Campaign extends Model
         'device_id',
         'mass_prsting_id',
         'content_id',
-        'from_contact_id',
-        'to_contact_id',
+        'contact_cat_ids', // حقل جديد لتخزين معرفات المجموعات
         'message_every',
-        'last_phone',
         'starting_time',
         'allowed_period_from',
         'allowed_period_to',
         'status',
     ];
+
+    protected $casts = [
+        'contact_cat_ids' => 'array',
+    ];
+
+
 
     // Relationship with Device
     public function device()
@@ -33,21 +37,32 @@ class Campaign extends Model
     {
         return $this->belongsTo(Device::class, 'device_id')->where('user_id', auth()->id());
     }
+//     public function user_device()
+// {
+//     return $this->belongsTo(Device::class, 'device_id');
+// }
+
 
     // Relationship with Content
     public function content()
     {
-        return $this->belongsTo(Content::class);
+        return $this->belongsTo(Content::class, 'content_id')->where('user_id', auth()->id());
     }
 
-    // Relationships with Contacts
-    public function fromContact()
-    {
-        return $this->belongsTo(Contact::class, 'from_contact_id');
-    }
+    public function contactCats()
+{
+    return $this->belongsToMany(ContactCat::class, 'campaign_contact_cat', 'campaign_id', 'contact_cat_id');
+}
 
-    public function toContact()
-    {
-        return $this->belongsTo(Contact::class, 'to_contact_id');
-    }
+
+    // // Relationships with Contacts
+    // public function fromContact()
+    // {
+    //     return $this->belongsTo(Contact::class, 'from_contact_id');
+    // }
+
+    // public function toContact()
+    // {
+    //     return $this->belongsTo(Contact::class, 'to_contact_id');
+    // }
 }

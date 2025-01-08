@@ -2,20 +2,25 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\CampaignResource\Pages;
-use App\Models\Campaign;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Campaign;
+use Filament\Forms\Form;
+use App\Models\ContactCat;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use App\Services\CampaignService;
+use App\Services\QuickSendService;
+use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\CampaignResource\Pages;
 
 class CampaignResource extends Resource
 {
     protected static ?string $model = Campaign::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?int $navigationSort = 4;
 
@@ -26,48 +31,39 @@ class CampaignResource extends Resource
                 Forms\Components\Select::make('device_id')
                     ->relationship('user_device', 'nickname')
                     ->required(),
-                Forms\Components\TextInput::make('mass_prsting_id')
-                    ->numeric()
-                    ->nullable(),
+                // Forms\Components\TextInput::make('mass_prsting_id')
+                //     ->numeric()
+                //     ->nullable(),
                 Forms\Components\Select::make('content_id')
                     ->relationship('content', 'title')
                     ->required(),
-                Forms\Components\Select::make('from_contact_id')
-                    ->label('From Contact')
-                    ->relationship('fromContact', 'name')
-                    ->searchable()
-                    ->preload()
+                    Forms\Components\Select::make('contact_cat_ids')
+                    ->multiple()
+                    ->label('Contact Groups')
+                    ->options(ContactCat::where('user_id', auth()->id())->pluck('name', 'id')->toArray())
                     ->required(),
-                Forms\Components\Select::make('to_contact_id')
-                    ->label('To Contact')
-                    ->relationship('toContact', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->required(),
+
                 Forms\Components\TextInput::make('message_every')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('last_phone')
-                    ->tel()
-                    ->maxLength(255)
-                    ->nullable(),
                 Forms\Components\TimePicker::make('starting_time')
                     ->required(),
                 Forms\Components\TimePicker::make('allowed_period_from')
                     ->required(),
                 Forms\Components\TimePicker::make('allowed_period_to')
                     ->required(),
-                    Forms\Components\Toggle::make('status')
-                    ->label('Status')
-                    ->onColor('success')
-                    ->offColor('danger')
-                    ->default(false)
-                    ->required(),
+                // Forms\Components\Toggle::make('status')
+                //     ->label('Status')
+                //     ->onColor('success')
+                //     ->offColor('danger')
+                //     ->default(false)
+                //     ->required(),
             ]);
     }
 
     public static function table(Table $table): Table
     {
+
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('user_device.nickname')
@@ -79,17 +75,26 @@ class CampaignResource extends Resource
                 Tables\Columns\TextColumn::make('content.title')
                     ->label('Content Title')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('fromContact.name')
-                    ->label('From Contact')
+                    // Tables\Columns\TextColumn::make('contactCats.name')
+                    // ->label('Contact Groups')
+                    // ->formatStateUsing(fn ($state) => implode(', ', $state)) // عرض المجموعات
+                    // ->sortable(),
+                    Tables\Columns\TextColumn::make('contact_cat_ids')
+                    ->label('Contact Groups')
+                    ->formatStateUsing(function ($state) {
+                        if (is_array($state)) {
+                            return implode(', ', $state); // إذا كانت البيانات مصفوفة
+                        }
+
+                        $decoded = json_decode($state, true);
+                        return is_array($decoded) ? implode(', ', $decoded) : 'N/A'; // إذا كانت JSON
+                    })
                     ->sortable(),
-                Tables\Columns\TextColumn::make('toContact.name')
-                    ->label('To Contact')
-                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('message_every')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('last_phone')
-                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('starting_time'),
                 Tables\Columns\TextColumn::make('allowed_period_from'),
                 Tables\Columns\TextColumn::make('allowed_period_to'),
@@ -98,18 +103,27 @@ class CampaignResource extends Resource
                 //         'success' => fn ($state): bool => $state === 'on',
                 //         'danger' => fn ($state): bool => $state === 'off',
                 //     ]),
-                Tables\Columns\ToggleColumn::make('status')
-    ->label('Status')
-    ->onColor('success')
-    ->offColor('danger')
-    ->onIcon('heroicon-o-check-circle')
-    ->offIcon('heroicon-o-x-circle')
-    ->action(function (Campaign $record, $state): void {
-        // تحديث الحالة مباشرة
-        $record->update(['status' => $state ? 'on' : 'off']);
-    })
-    ->sortable()
-    ->tooltip('Click to toggle status'),
+                // Tables\Columns\ToggleColumn::make('status')
+                //     ->label('Status')
+                //     ->onColor('success')
+                //     ->offColor('danger')
+                //     ->onIcon('heroicon-o-check-circle')
+                //     ->offIcon('heroicon-o-x-circle')
+                //     ->action(function (Campaign $record, $state): void {
+                //         // تحديث الحالة مباشرة
+                //         $record->update(['status' => $state ? 'on' : 'off']);
+                //     })
+                //     ->sortable()
+                //     ->tooltip('Click to toggle status'),
+                Tables\Columns\BadgeColumn::make('status')
+                ->label('Status')
+                ->colors([
+                    'success' => 'started',
+                    'warning' => 'paused',
+                    'danger' => 'failed',
+                    'gray' => 'created',
+                ])
+                ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -121,46 +135,81 @@ class CampaignResource extends Resource
             ])
             ->filters([
 
-                Tables\Filters\SelectFilter::make('device_id')
-    ->label('Device')
-    ->options(function () {
-        return \App\Models\Device::where('user_id', auth()->id())
-            ->pluck('nickname', 'id')
-            ->toArray();
-    })
-    ->query(function (Builder $query, $state) {
-        if ($state) {
-            $query->where('device_id', $state);
-        }
-    }),
-    Tables\Filters\SelectFilter::make('content_id')
-    ->label('Content')
-    ->options(function () {
-        return \App\Models\Content::where('user_id', auth()->id())
-            ->pluck('title', 'id')
-            ->toArray();
-    })
-    ->query(function (Builder $query, $state) {
-        if ($state) {
-            $query->where('content_id', $state);
-        }
-    }),
+                // Tables\Filters\SelectFilter::make('device_id')
+                // ->label('Device')
+                // ->options(function () {
+                //     return \App\Models\Device::where('user_id', auth()->id())
+                //         ->pluck('nickname', 'id')
+                //         ->toArray();
+                // })
+                // ->query(function (Builder $query, $state) {
+                //     if ($state) {
+                //         $query->where('device_id', $state);
+                //     }
+                // }),
 
+                // Tables\Filters\SelectFilter::make('content_id')
+                //     ->label('Content')
+                //     ->options(function () {
+                //         return \App\Models\Content::where('user_id', auth()->id())
+                //             ->pluck('title', 'id')
+                //             ->toArray();
+                //     })
+                //     ->query(function (Builder $query, $state) {
+                //         if ($state) {
+                //             $query->where('content_id', $state);
+                //         }
+                //     }),
 
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        1 => 'On',  // 1 تمثل القيمة المنطقية true
-                        0 => 'Off', // 0 تمثل القيمة المنطقية false
-                    ])
-                    ->query(function (Builder $query, $state) {
-                        if ($state !== null) {
-                            $query->where('status', $state);
-                        }
-                    }),
+                // Tables\Filters\SelectFilter::make('status')
+                //     ->options([
+                //         1 => 'On',  // 1 تمثل القيمة المنطقية true
+                //         0 => 'Off', // 0 تمثل القيمة المنطقية false
+                //     ])
+                //     ->query(function (Builder $query, $state) {
+                //         if ($state !== null) {
+                //             $query->where('status', $state);
+                //         }
+                //     }),
             ])
 
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Action::make('toggle_status')
+                ->label(fn ($record) => match ($record->status) {
+                    'created' => 'Start',
+                    'started' => 'Pause',
+                    'paused' => 'Resume',
+                    'resumed' => 'Pause',
+                    default => 'Unknown', // للعرض الافتراضي
+                })
+                ->icon(fn ($record) => match ($record->status) {
+                    'created' => 'heroicon-o-play',
+                    'started' => 'heroicon-o-pause',
+                    'paused' => 'heroicon-o-play',
+                    'resumed' => 'heroicon-o-pause',
+                    default => 'heroicon-o-question-mark-circle',
+                })
+                ->action(function ($record) {
+                    try {
+                        match ($record->status) {
+                            'created' => CampaignService::createCampaignFromCampaignsTable($record),
+                            'started' => CampaignService::pauseCampaign($record),
+                            'paused' => CampaignService::resumeCampaign($record),
+                            'resumed' => CampaignService::pauseCampaign($record),
+                            default => throw new \Exception("Unhandled status: {$record->status}"),
+                        };
+                    } catch (\Exception $e) {
+                        \Log::error("Error in campaign toggle: " . $e->getMessage());
+                        throw $e; // إعادة رمي الاستثناء للتعامل معه في الواجهة
+                    }
+                })
+                ->requiresConfirmation()
+                ->successNotificationTitle(fn ($record) => match ($record->status) {
+                    'created' => 'Campaign started successfully.',
+                    'started' => 'Campaign paused successfully.',
+                    'paused' => 'Campaign resumed successfully.',
+                }),
+                // Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -184,12 +233,18 @@ class CampaignResource extends Resource
     }
 
     public static function getEloquentQuery(): Builder
-{
-    return parent::getEloquentQuery()
-        ->whereHas('user_device', function (Builder $query) {
-            $query->where('user_id', auth()->id()); // تصفية الأجهزة حسب المستخدم الحالي
-        });
-}
+    {
+        \Log::info('Fetching campaigns for user_id: ' . auth()->id());
+
+        return parent::getEloquentQuery()
+            ->whereHas('user_device', function (Builder $query) {
+                $query->where('user_id', auth()->id());
+            });
+    }
+//     public static function getEloquentQuery(): Builder
+// {
+//     return parent::getEloquentQuery();
+// }
 
 
 }
