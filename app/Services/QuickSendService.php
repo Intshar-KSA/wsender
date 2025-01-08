@@ -28,7 +28,7 @@ class QuickSendService
                 'Authorization' => '40703bb7812b727ec01c24f2da518c407342559c'
             ];
 
-            dd($data['phone_numbers']);
+            // dd($data['phone_numbers']);
             // إرسال الطلب إلى API
             $response = Http::asMultipart()->withHeaders($headers)->post('https://wappi.pro/mailings/init?profile_id=' . $data['profile_id'], [
                 'mass_text' => $data['message_text'],
