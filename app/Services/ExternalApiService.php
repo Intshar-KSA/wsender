@@ -32,15 +32,34 @@ class ExternalApiService
         return $response->json();
     }
 
+    public function getProfiles()
+    {
+        $response = Http::withHeaders($this->headers)->get($this->baseUrl."/profile/all/get");
+\Log::info('response: ' . $response->body());
+        if ($response->ok()) {
+            return $response->json()['profiles'];
+        }
+
+        return [];
+    }
+
     public function deleteProfile(string $profileId)
     {
         $url = $this->baseUrl . '/profile/delete?profile_id=' . urlencode($profileId);
 
         $response = Http::withHeaders($this->headers)->post($url);
 
+        \Log::info('response: ' . $response->body());
         if ($response->successful()) {
             return $response->json();
         }
+
+          // التحقق من نوع الخطأ في الاستجابة
+    $responseBody = $response->json();
+    if (isset($responseBody['status']) && $responseBody['status'] === 'error' && $responseBody['detail'] === 'Profile not found') {
+        \Log::warning("Profile not found for ID: {$profileId}. Proceeding with local deletion.");
+        return ['status' => 'done', 'detail' => 'Profile not found']; // السماح بالحذف المحلي
+    }
 
         throw new \Exception('Failed to delete profile via API. Response: ' . $response->body());
     }

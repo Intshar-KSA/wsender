@@ -3,18 +3,19 @@
 namespace App\Filament\Resources;
 
 // use livewire ;
-use App\Filament\Resources\DeviceResource\Pages;
-use App\Models\Device;
-use App\Services\ExternalApiService;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Notifications\Notification;
-use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Actions\Action;
+use App\Models\Device;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use Illuminate\Support\Collection;
+use Filament\Tables\Actions\Action;
+use App\Services\ExternalApiService;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Livewire; // استيراد النوع الصحيح
+use App\Filament\Resources\DeviceResource\Pages;
 
 class DeviceResource extends Resource
 {
@@ -23,6 +24,37 @@ class DeviceResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?int $navigationSort = -2;
+
+    public static Collection $profiles;// لتخزين البيانات المحملة
+
+    public static function loadProfiles(): void
+    {
+        if (empty(self::$profiles)) {
+            $apiService = app(\App\Services\ExternalApiService::class);
+            self::$profiles = collect($apiService->getProfiles());
+        }
+    }
+
+    // public static function loadProfiles(): void
+    // {
+    //     // تحقق إذا كانت البيانات قد تم تحميلها بالفعل
+    //     if (empty(self::$profiles)) {
+    //         // إنشاء مفتاح كاش خاص
+    //         $cacheKey = 'profiles_cache';
+
+    //         // جلب البيانات من الكاش إذا كانت موجودة
+    //         self::$profiles = cache()->remember($cacheKey, now()->addMinutes(5), function () {
+    //             $apiService = app(\App\Services\ExternalApiService::class);
+    //             return collect($apiService->getProfiles());
+    //         });
+    //     }
+    // }
+
+    public static function getProfiles(): array
+    {
+        // إرجاع البيانات المحملة
+        return self::$profiles ?? [];
+    }
 
     public static function form(Form $form): Form
     {
@@ -49,58 +81,58 @@ class DeviceResource extends Resource
 
     public static function table(Table $table): Table
     {
+        self::loadProfiles();
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('nickname')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('webhook_url')
                     ->searchable(),
-                Tables\Columns\BooleanColumn::make('status')
-                    ->label('Active')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                    Tables\Columns\TextColumn::make('remaining_time')
-                    ->label('Time Remaining')
-                    ->badge()
+                // Tables\Columns\BooleanColumn::make('status')
+                //     ->label('Active')
+                //     ->sortable(),
+                    // Tables\Columns\TextColumn::make('extra_data.name')
+                    // ->label('Profile Name')
+                    // ->getStateUsing(function (Device $record) {
+                    //     $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+                    //     return $profile['name'] ?? 'N/A';
+                    // }),
+                Tables\Columns\TextColumn::make('extra_data.phone')
+                    ->label('Phone Number')
                     ->getStateUsing(function (Device $record) {
-                        // الحصول على الاشتراك النشط
-                        $activeSubscription = $record->subscriptions()
-                            ->where('start_date', '<=', now()) // الاشتراك بدأ
-                            ->latest('start_date') // أحدث اشتراك
-                            ->first();
-
-                        if ($activeSubscription) {
-                            // حساب تاريخ انتهاء الاشتراك باستخدام الدالة
-                            $expirationDate = $activeSubscription->getExpirationDate();
-
-                            if ($expirationDate && now()->lessThan($expirationDate)) {
-                                $remainingDays = now()->diffInDays($expirationDate);
-
-                                return $remainingDays > 0
-                                    ? (round($remainingDays)) . ' days remaining'
-                                    : 'Less than a day remaining';
-                            }
-
-                            return 'Expired'; // الاشتراك منتهي
-                        }
-
-                        return 'No Active Subscription'; // لا يوجد اشتراك نشط
-                    })
-                    ->sortable()
-                    ->colors([
-                        'danger' => fn ($state) => $state === 'Expired' || $state === 'No Active Subscription',
-                        'warning' => fn ($state) => is_numeric($state) && $state <= 5, // أقل من 5 أيام
-                        'success' => fn ($state) => is_numeric($state) && $state > 5,  // أكثر من 5 أيام
-                    ]),
+                        $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+                        return $profile['phone'] ?? 'N/A';
+                    }),
+                Tables\Columns\TextColumn::make('extra_data.app_status')
+                    ->label('App Status')
+                    ->getStateUsing(function (Device $record) {
+                        $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+                        return $profile['app_status'] ?? 'Unknown';
+                    }),
+                Tables\Columns\TextColumn::make('extra_data.worked_days')
+                    ->label('Worked Days')
+                    ->getStateUsing(function (Device $record) {
+                        $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+                        return $profile['worked_days'] ?? 0;
+                    }),
+                Tables\Columns\TextColumn::make('extra_data.message_count')
+                    ->label('Message Count')
+                    ->getStateUsing(function (Device $record) {
+                        $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+                        return $profile['message_count'] ?? 0;
+                    }),
+                Tables\Columns\BooleanColumn::make('extra_data.authorized')
+                    ->label('Authorized')
+                    ->getStateUsing(function (Device $record) {
+                        $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+                        return $profile['authorized'] ?? false;
+                    }),
+                Tables\Columns\TextColumn::make('extra_data.webhook_url')
+                    ->label('Webhook URL')
+                    ->getStateUsing(function (Device $record) {
+                        $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+                        return $profile['webhook_url'] ?? 'N/A';
+                    }),
 
                     ])
             ->filters([
@@ -243,4 +275,23 @@ class DeviceResource extends Resource
     {
         return parent::getEloquentQuery()->where('user_id', auth()->id());
     }
+
+    // public static function getEloquentQuery(): Builder
+    // {
+    //     $query = parent::getEloquentQuery()->where('user_id', auth()->id());
+
+    //     // استدعاء API لتحميل البيانات
+    //     $apiService = app(\App\Services\ExternalApiService::class);
+    //     $profiles = collect($apiService->getProfiles());
+
+    //     // إضافة البيانات الإضافية إلى الأجهزة
+    //     $query->get()->each(function ($device) use ($profiles) {
+    //         $profile = $profiles->firstWhere('profile_id', $device->profile_id);
+    //         $device->extra_data = $profile ?? []; // إضافة البيانات أو قيم افتراضية فارغة
+    //     });
+
+    //     return $query;
+    // }
+
+
 }

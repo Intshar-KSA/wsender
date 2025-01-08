@@ -57,8 +57,8 @@ class ContentResource extends Resource
                     ->required()
                     ->visible(fn (callable $get) => $get('file_type') !== 'text') // إظهار فقط إذا لم يكن النوع نصًا
                     ->imagePreviewHeight('100') // معاينة الصور
-                    ->enableDownload() // تفعيل تنزيل الملفات
-                    ->enableOpen() // تفعيل فتح الملفات
+                    ->downloadable() // تفعيل تنزيل الملفات
+                    ->openable() // تفعيل فتح الملفات
                     ->rules(['required_if:file_type,video,image,doc']),
 
                 Forms\Components\Hidden::make('user_id')

@@ -17,6 +17,18 @@ class Device extends Model
         'status',
     ];
 
+    protected $appends = ['extra_data'];
+
+    // خاصية إضافية لتحميل البيانات الإضافية
+    public function getExtraDataAttribute()
+    {
+        // استدعاء API مرة واحدة لتحميل البيانات
+        $apiService = app(\App\Services\ExternalApiService::class);
+        $profiles = collect($apiService->getProfiles());
+
+        // البحث عن البيانات المطابقة بناءً على profile_id
+        return $profiles->firstWhere('profile_id', $this->profile_id) ?? [];
+    }
     // Relationship with User
     public function user()
     {
