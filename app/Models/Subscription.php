@@ -14,6 +14,10 @@ class Subscription extends Model
         'device_id',
         'plan_id',
         'start_date',
+        'payment_status',
+        'payment_method',
+        'receipt_url',
+        'transaction_id',
     ];
     protected $casts = [
         'start_date' => 'datetime',
@@ -36,6 +40,11 @@ class Subscription extends Model
     {
         return $this->belongsTo(Device::class);
     }
+
+
+
+
+
 
 
 
