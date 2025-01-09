@@ -97,6 +97,39 @@ class DeviceResource extends Resource
                     //     $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
                     //     return $profile['name'] ?? 'N/A';
                     // }),
+                    Tables\Columns\TextColumn::make('remaining_time')
+                    ->label('Time Remaining')
+                    ->badge()
+                    ->getStateUsing(function (Device $record) {
+                        // الحصول على الاشتراك النشط
+                        $activeSubscription = $record->subscriptions()
+                            ->where('start_date', '<=', now()) // الاشتراك بدأ
+                            ->latest('start_date') // أحدث اشتراك
+                            ->first();
+
+                        if ($activeSubscription) {
+                            // حساب تاريخ انتهاء الاشتراك باستخدام الدالة
+                            $expirationDate = $activeSubscription->getExpirationDate();
+
+                            if ($expirationDate && now()->lessThan($expirationDate)) {
+                                $remainingDays = now()->diffInDays($expirationDate);
+
+                                return $remainingDays > 0
+                                    ? (round($remainingDays)) . ' days remaining'
+                                    : 'Less than a day remaining';
+                            }
+
+                            return 'Expired'; // الاشتراك منتهي
+                        }
+
+                        return 'No Active Subscription'; // لا يوجد اشتراك نشط
+                    })
+                    ->sortable()
+                    ->colors([
+                        'danger' => fn ($state) => $state === 'Expired' || $state === 'No Active Subscription',
+                        'warning' => fn ($state) => is_numeric($state) && $state <= 5, // أقل من 5 أيام
+                        'success' => fn ($state) => is_numeric($state) && $state > 5,  // أكثر من 5 أيام
+                    ]),
                 Tables\Columns\TextColumn::make('extra_data.phone')
                     ->label('Phone Number')
                     ->getStateUsing(function (Device $record) {
