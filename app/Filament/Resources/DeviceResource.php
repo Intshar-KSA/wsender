@@ -86,6 +86,9 @@ class DeviceResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nickname')
                     ->searchable(),
+                    Tables\Columns\TextColumn::make('profile_id')
+                    ->copyable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('webhook_url')
                     ->searchable(),
                 // Tables\Columns\BooleanColumn::make('status')
