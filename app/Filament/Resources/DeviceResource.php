@@ -89,8 +89,8 @@ class DeviceResource extends Resource
                     Tables\Columns\TextColumn::make('profile_id')
                     ->copyable()
                     ->searchable(),
-                // Tables\Columns\TextColumn::make('webhook_url')
-                //     ->searchable(),
+                Tables\Columns\TextColumn::make('webhook_url')
+                    ->searchable(),
                 // Tables\Columns\BooleanColumn::make('status')
                 //     ->label('Active')
                 //     ->sortable(),
@@ -164,12 +164,12 @@ class DeviceResource extends Resource
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
                         return $profile['authorized'] ?? false;
                     }),
-                Tables\Columns\TextColumn::make('extra_data.webhook_url')
-                    ->label('Webhook URL')
-                    ->getStateUsing(function (Device $record) {
-                        $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
-                        return $profile['webhook_url'] ?? 'N/A';
-                    }),
+                // Tables\Columns\TextColumn::make('extra_data.webhook_url')
+                //     ->label('Webhook URL')
+                //     ->getStateUsing(function (Device $record) {
+                //         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+                //         return $profile['webhook_url'] ?? 'N/A';
+                //     }),
 
                     ])
             ->filters([
