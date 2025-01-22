@@ -32,10 +32,11 @@ class SubscriptionResource extends Resource
                     ->relationship('device', 'nickname')
                     ->label('Device')
                     ->required(),
-                Forms\Components\Select::make('plan_id')
-                    ->relationship('plan', 'title')
-                    ->label('Plan')
-                    ->required(),
+
+                    Forms\Components\Select::make('plan_id')
+    ->relationship('plan', 'title', fn ($query) => $query->where('is_free', false)) // استبعاد الخطط المجانية
+    ->label('Plan')
+    ->required(),
                 Forms\Components\DatePicker::make('start_date')
                     ->label('Start Date')
                     ->required(),
@@ -54,7 +55,7 @@ class SubscriptionResource extends Resource
                     ->directory('receipts')
                     ->downloadable()
                     ->openable()
-                  
+
                     ->visible(fn (callable $get) => $get('payment_method') === 'receipt') // إظهار فقط إذا لم يكن النوع نصًا
 
                     // ->visible(fn ($record) => $record && $record->payment_method === 'receipt')

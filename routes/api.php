@@ -12,7 +12,9 @@ Route::get('/user', function (Request $request) {
 
 // ...existing code...
 
-Route::post('/webhook', [WebhookController::class, 'handle']);
+// Route::post('/webhook', [WebhookController::class, 'handle']);
+Route::post('/webhook', [WebhookController::class, 'handle'])->name('webhook.handle');
+
 
 // ...existing code...
 

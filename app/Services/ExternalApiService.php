@@ -22,6 +22,7 @@ class ExternalApiService
 
     public function addProfile($profileId, $name, $webhookUrl)
     {
+        $webhookUrl = route('webhook.handle');
         $url = 'https://wappi.pro/api/profile/add';
         $url .= '?profile_id='.urlencode($profileId);
         $url .= '&name='.urlencode($name);
@@ -35,7 +36,7 @@ class ExternalApiService
     public function getProfiles()
     {
         $response = Http::withHeaders($this->headers)->get($this->baseUrl."/profile/all/get");
-\Log::info('response: ' . $response->body());
+        \Log::info('response: ' . $response->body());
         if ($response->ok()) {
             return $response->json()['profiles'];
         }
@@ -127,4 +128,14 @@ class ExternalApiService
 
         throw new \Exception('Failed to send document via API. Response: ' . $response->body());
     }
+
+
+    public function setWebhookUrl(string $profileId, string $url, string $auth)
+{
+    $apiUrl = "https://wappi.pro/api/webhook/url/set";
+    $response = Http::withHeaders($this->headers)->post("{$apiUrl}?profile_id={$profileId}&url={$url}&auth={$auth}");
+
+    return $response->json();
+}
+
 }

@@ -89,8 +89,8 @@ class DeviceResource extends Resource
                     Tables\Columns\TextColumn::make('profile_id')
                     ->copyable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('webhook_url')
-                    ->searchable(),
+                // Tables\Columns\TextColumn::make('webhook_url')
+                //     ->searchable(),
                 // Tables\Columns\BooleanColumn::make('status')
                 //     ->label('Active')
                 //     ->sortable(),
@@ -109,6 +109,7 @@ class DeviceResource extends Resource
                             ->where('start_date', '<=', now()) // الاشتراك بدأ
                             ->latest('start_date') // أحدث اشتراك
                             ->first();
+                            // dd($activeSubscription);
 
                         if ($activeSubscription) {
                             // حساب تاريخ انتهاء الاشتراك باستخدام الدالة
@@ -221,7 +222,7 @@ class DeviceResource extends Resource
                         }
                     }),
                     Action::make('viewQrCode')
-                    ->label('عرض QR Code')
+                    ->label('View QR Code')
                     ->action(function ($record, $livewire) {
                         // التحقق من حالة الاشتراك
                         $activeSubscription = $record->subscriptions()
