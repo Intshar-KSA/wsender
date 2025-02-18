@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ChatBotResource\Pages;
+use App\helper\ModelLabelHelper;
 use App\Models\ChatBot;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -158,5 +159,14 @@ class ChatBotResource extends Resource
             ->whereHas('user_device', function (Builder $query) {
                 $query->where('user_id', auth()->id());
             });
+    }
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
     }
 }

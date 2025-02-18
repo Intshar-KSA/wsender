@@ -16,6 +16,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Livewire; // استيراد النوع الصحيح
 use App\Filament\Resources\DeviceResource\Pages;
+use App\helper\ModelLabelHelper;
 
 class DeviceResource extends Resource
 {
@@ -330,5 +331,13 @@ class DeviceResource extends Resource
     //     return $query;
     // }
 
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
 
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
+    }
 }

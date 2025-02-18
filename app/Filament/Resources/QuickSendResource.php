@@ -23,6 +23,7 @@ use Filament\Forms\Components\NumberInput;
 use App\Filament\Resources\QuickSendResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\QuickSendResource\RelationManagers;
+use App\helper\ModelLabelHelper;
 
 class QuickSendResource extends Resource
 {
@@ -209,5 +210,14 @@ public static function table(Table $table): Table
 public static function afterCreate($record)
 {
     QuickSendService::createCampaign($record->toArray());
+}
+public static function getModelLabel(): string
+{
+    return ModelLabelHelper::getModelLabel(static::$model);
+}
+
+public static function getPluralModelLabel(): string
+{
+    return ModelLabelHelper::getPluralModelLabel(static::$model);
 }
 }

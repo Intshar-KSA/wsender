@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContentResource\Pages;
+use App\helper\ModelLabelHelper;
 use App\Models\Content;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -157,5 +158,15 @@ class ContentResource extends Resource
     {
         return parent::getEloquentQuery()
             ->where('user_id', auth()->id()); // تصفية السجلات لتكون خاصة بالمستخدم الحالي
+    }
+
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
     }
 }

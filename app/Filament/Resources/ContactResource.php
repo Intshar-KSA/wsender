@@ -11,6 +11,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ContactResource\Pages;
+use App\helper\ModelLabelHelper;
 
 class ContactResource extends Resource
 {
@@ -112,6 +113,16 @@ class ContactResource extends Resource
     return parent::getEloquentQuery()
         ->where('user_id', auth()->id()) // تصفية السجلات الخاصة بالمستخدم الحالي
         ->with(['user', 'contactCat']); // تحميل العلاقات لتجنب مشاكل N+1
+}
+
+public static function getModelLabel(): string
+{
+    return ModelLabelHelper::getModelLabel(static::$model);
+}
+
+public static function getPluralModelLabel(): string
+{
+    return ModelLabelHelper::getPluralModelLabel(static::$model);
 }
 
 }
