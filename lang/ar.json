@@ -1,6 +1,6 @@
 {
     "User": "المستخدم",
-    "Device": "الجهاز",
+    "device_id": "جهاز",
     "Plan": "الخطة",
     "Start date": "تاريخ البدء",
     "Payment method": "طريقة الدفع",
@@ -26,8 +26,8 @@
     "Reject": "رفض",
     "Subscriptions": "الاشتراكات",
     "Subscription": "إشتراك",
-    "Device id": "معرف الجهاز",
-    "Content id": "معرف المحتوى",
+    "Device id": "جهاز",
+    "content_id": "إعادة",
     "Contact cat ids": "معرفات فئات الاتصال",
     "Message every": "رسالة كل",
     "Starting time": "وقت البدء",
@@ -37,9 +37,43 @@
     "Mass prsting id": "معرف البث الجماعي",
     "Content title": "عنوان المحتوى",
     "Contact groups": "مجموعات الاتصال",
-    "Status": "الحالة",
-    "Created at": "أنشئت في",
-    "Updated at": "تم التحديث في",
+    "status": "الحالة",
+    "created_at": "تاريخ الإنشاء",
+    "updated_at": "تاريخ التحديث",
     "Campaign": "الحملة",
-    "Campaigns": "الحملات"
+    "Campaigns": "الحملات",
+    "Nickname": "اللقب",
+    "Profile id": "معرف الملف الشخصي",
+    "Webhook url": "عنوان URL للويب هوك",
+    "Phone number": "رقم الهاتف",
+    "App status": "حالة التطبيق",
+    "Worked days": "أيام العمل",
+    "Message count": "عدد الرسائل",
+    "Authorized": "مصرح",
+    "Delete": "حذف",
+    "View qr code": "عرض رمز الاستجابة السريعة",
+    "Msg": "رسالة",
+    "Replay": "إعادة",
+    "type": "نوع المطابقة",
+    "on": "تشغيل",
+    "off": "إيقاف",
+    "Content id": "إعادة",
+    "Type": "نوع المطابقة",
+    "Status": "الحالة",
+    "Created at": "تاريخ الإنشاء",
+    "Updated at": "تاريخ التحديث",
+    "On": "تشغيل",
+    "Off": "إيقاف",
+    "Message text": "نص الرسالة",
+    "Phone numbers": "أرقام الهاتف",
+    "File name": "اسم الملف",
+    "Timeout to": "مهلة إلى (ثواني)",
+    "Timeout from": "مهلة من (ثواني)",
+    "Image": "رفع صورة"
+
+
+
+
+
+
 }
