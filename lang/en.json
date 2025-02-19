@@ -101,5 +101,12 @@
     "Chat bot": "Chat Bot",
     "Total Subscriptions": "Total Subscriptions",
     "Active Subscriptions": "Active Subscriptions",
-    "Free Subscriptions": "Free Subscriptions"
+    "Free Subscriptions": "Free Subscriptions",
+    "helperText.profile_id": "Choose a device to send the message.",
+    "helperText.message_text": "Enter the message content to send.",
+    "helperText.phone_numbers": "Enter phone numbers, one per line.",
+    "helperText.image": "Optional: Attach an image to your message.",
+    "helperText.timeout_from": "Minimum time delay for sending messages.",
+    "helperText.timeout_to": "Maximum time delay for sending messages.",
+    "helperText.file_name": "Name of the uploaded file (default: картинка)."
 }

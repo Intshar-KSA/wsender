@@ -41,41 +41,41 @@ class QuickSendResource extends Resource
                 ->searchable()
                 ->preload()
                 ->required()
-                ->helperText('Choose a device to send the message.'),
+                ->helperText(__('helperText.profile_id')),
 
             Textarea::make('message_text')
                 ->required()
                 ->rows(3)
-                ->helperText('Enter the message content to send.'),
+                ->helperText(__('helperText.message_text')),
 
             Textarea::make('phone_numbers')
                 ->required()
                 ->rows(3)
-                ->helperText('Enter phone numbers, one per line.'),
+                ->helperText(__('helperText.phone_numbers')),
 
             FileUpload::make('image')
                 ->image()
                 ->directory('uploads/images')
                 ->visibility('public')
-                ->helperText('Optional: Attach an image to your message.'),
+                ->helperText(__('helperText.image')),
 
             TextInput::make('timeout_from')
                 ->numeric()
                 ->default(5)
                 ->required()
-                ->helperText('Minimum time delay for sending messages.'),
+                ->helperText(__('helperText.timeout_from')),
 
             TextInput::make('timeout_to')
                 ->numeric()
                 ->default(8)
                 ->required()
-                ->helperText('Maximum time delay for sending messages.'),
+                ->helperText(__('helperText.timeout_to')),
 
             TextInput::make('file_name')
                 ->default('')
                 ->hidden()
                 ->required()
-                ->helperText('Name of the uploaded file (default: картинка).'),
+                ->helperText(__('helperText.file_name')),
         ]);
     }
 
