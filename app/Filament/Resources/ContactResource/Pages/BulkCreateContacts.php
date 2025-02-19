@@ -7,9 +7,10 @@ use App\Models\Contact;
 use App\Models\ContactCat;
 use Filament\Forms\Components;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\ContactResource;
+use App\helper\ModelLabelHelper;
+use Illuminate\Contracts\Support\Htmlable;
 
 class BulkCreateContacts extends Page
 {
@@ -82,17 +83,19 @@ class BulkCreateContacts extends Page
     {
         return [
             Components\Select::make('data.contact_cat_id') // لاحظ الربط بـ 'data.contact_cat_id'
-                ->label('Select Category')
                 ->options(ContactCat::where('user_id', auth()->id())->pluck('name', 'id'))
                 ->required(),
 
             Components\Textarea::make('data.numbers') // لاحظ الربط بـ 'data.numbers'
-                ->label('Enter Numbers (one per line)')
                 ->placeholder("1234567890\n0987654321")
                 ->rows(10)
                 ->required(),
         ];
     }
+    public function getTitle(): string | Htmlable
+    {
 
+        return ModelLabelHelper::getModelLabel(static::class);
+    }
 
 }

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -102,6 +103,10 @@ class AppServiceProvider extends ServiceProvider
         // Configure Section globally
         Section::configureUsing(function (Section $section): void {
             $section->translateLabel(); // Translate the section label
+        });
+
+        Action::configureUsing(function (Action $action): void {
+            $action->translateLabel();  // Apply translation
         });
 
         // Configure LanguageSwitch
