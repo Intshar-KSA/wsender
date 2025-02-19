@@ -20,6 +20,7 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\Column;
 
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -108,6 +109,8 @@ class AppServiceProvider extends ServiceProvider
         Action::configureUsing(function (Action $action): void {
             $action->translateLabel();  // Apply translation
         });
+
+
 
         // Configure LanguageSwitch
         LanguageSwitch::configureUsing(function (LanguageSwitch $switch) {

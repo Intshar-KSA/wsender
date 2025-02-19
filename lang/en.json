@@ -98,5 +98,8 @@
     "Bulk create contacts": "Bulk Create Contacts",
     "Bulk create": "Bulk Create",
     "Chat bots": "Chat Bots",
-    "Chat bot": "Chat Bot"
+    "Chat bot": "Chat Bot",
+    "Total Subscriptions": "Total Subscriptions",
+    "Active Subscriptions": "Active Subscriptions",
+    "Free Subscriptions": "Free Subscriptions"
 }

@@ -98,5 +98,8 @@
     "Bulk create contacts": " مجموعه من جهات الاتصال",
     "Bulk create": " مجموعه من جهات الاتصال",
     "Chat bots": "بوتات الدردشة",
-    "Chat bot": "بوت الدردشة"
+    "Chat bot": "بوت الدردشة",
+    "Total Subscriptions": "اجمالي الاشتراكات",
+    "Active Subscriptions": "الاشتراكات النشطة",
+    "Free Subscriptions": "الاشتراكات المجانية"
 }
