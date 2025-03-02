@@ -11,6 +11,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ContactResource\Pages;
+use App\helper\ModelLabelHelper;
 
 class ContactResource extends Resource
 {
@@ -26,27 +27,22 @@ class ContactResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
-                    ->default('Unknown')
-                    ->label('Contact Name'),
+                    ->default('Unknown'),
                 Forms\Components\TextInput::make('phone')
-                    ->required()
-                    ->label('Phone Number'),
+                    ->required(),
                 // Forms\Components\Select::make('user_id')
                 //     ->relationship('user', 'name')
                 //     ->searchable()
-                //     ->required()
-                //     ->label('User'),
+                //     ->required(),
                 Forms\Components\Hidden::make('user_id')
                 ->default(auth()->id())
                 ->required(),
-
 
                 Forms\Components\Select::make('contact_cat_id')
                 ->relationship('contactCat', 'name', fn (Builder $query) => $query->where('user_id', auth()->id())) // تصفية الفئات بناءً على المستخدم الحالي
                 ->searchable()
                 ->required()
-                ->preload()
-                ->label('Category'),
+                ->preload(),
             ]);
     }
 
@@ -55,29 +51,23 @@ class ContactResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Name')
                     ->sortable()
                     ->searchable(), // السماح بالبحث في الاسم
 
                 Tables\Columns\TextColumn::make('phone')
-                    ->label('Phone Number')
                     ->sortable()
                     ->searchable(), // السماح بالبحث في رقم الهاتف
 
                 Tables\Columns\TextColumn::make('contactCat.name')
-                    ->label('Category')
                     ->sortable()
                     ->searchable(), // السماح بالبحث في التصنيف
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Created At')
                     ->dateTime()
                     ->sortable(), // السماح بترتيب تاريخ الإنشاء
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('contact_cat_id')
-                    ->label('Filter by Category')
-
                     ->options(ContactCat::pluck('name', 'id')->toArray()), // إضافة فلتر حسب التصنيف
 
                 Tables\Filters\TrashedFilter::make(), // دعم الفلترة للعناصر المحذوفة إذا كنت تستخدم Soft Deletes
@@ -91,7 +81,6 @@ class ContactResource extends Resource
             ]);
     }
 
-
     public static function getRelations(): array
     {
         return [];
@@ -104,14 +93,23 @@ class ContactResource extends Resource
             'create' => Pages\CreateContact::route('/create'),
             'edit' => Pages\EditContact::route('/{record}/edit'),
             'bulk-create' => Pages\BulkCreateContacts::route('/bulk-create'),
-
         ];
     }
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-{
-    return parent::getEloquentQuery()
-        ->where('user_id', auth()->id()) // تصفية السجلات الخاصة بالمستخدم الحالي
-        ->with(['user', 'contactCat']); // تحميل العلاقات لتجنب مشاكل N+1
-}
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id()) // تصفية السجلات الخاصة بالمستخدم الحالي
+            ->with(['user', 'contactCat']); // تحميل العلاقات لتجنب مشاكل N+1
+    }
+
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
+    }
 }

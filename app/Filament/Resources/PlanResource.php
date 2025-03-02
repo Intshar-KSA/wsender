@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PlanResource\Pages;
+use App\helper\ModelLabelHelper;
 use App\Models\Plan;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -101,5 +102,15 @@ Tables\Columns\TextColumn::make('hours')
     {
         // تحقق من دور المستخدم
         return auth()->user()->role === 'admin'; // يعرض المورد فقط إذا كان الدور Admin
+    }
+
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
     }
 }

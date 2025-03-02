@@ -14,11 +14,11 @@ use App\Services\QuickSendService;
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CampaignResource\Pages;
+use App\helper\ModelLabelHelper;
 
 class CampaignResource extends Resource
 {
     protected static ?string $model = Campaign::class;
-
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -37,9 +37,8 @@ class CampaignResource extends Resource
                 Forms\Components\Select::make('content_id')
                     ->relationship('content', 'title')
                     ->required(),
-                    Forms\Components\Select::make('contact_cat_ids')
+                Forms\Components\Select::make('contact_cat_ids')
                     ->multiple()
-                    ->label('Contact Groups')
                     ->options(ContactCat::where('user_id', auth()->id())->pluck('name', 'id')->toArray())
                     ->required(),
 
@@ -67,20 +66,17 @@ class CampaignResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('user_device.nickname')
-                    ->label('Device Nickname')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('mass_prsting_id')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('content.title')
-                    ->label('Content Title')
                     ->sortable(),
-                    // Tables\Columns\TextColumn::make('contactCats.name')
-                    // ->label('Contact Groups')
-                    // ->formatStateUsing(fn ($state) => implode(', ', $state)) // عرض المجموعات
-                    // ->sortable(),
-                    Tables\Columns\TextColumn::make('contact_cat_ids')
-                    ->label('Contact Groups')
+                // Tables\Columns\TextColumn::make('contactCats.name')
+                // ->label('Contact Groups')
+                // ->formatStateUsing(fn ($state) => implode(', ', $state)) // عرض المجموعات
+                // ->sortable(),
+                Tables\Columns\TextColumn::make('contact_cat_ids')
                     ->formatStateUsing(function ($state) {
                         if (is_array($state)) {
                             return implode(', ', $state); // إذا كانت البيانات مصفوفة
@@ -116,7 +112,6 @@ class CampaignResource extends Resource
                 //     ->sortable()
                 //     ->tooltip('Click to toggle status'),
                 Tables\Columns\BadgeColumn::make('status')
-                ->label('Status')
                 ->colors([
                     'success' => 'started',
                     'warning' => 'paused',
@@ -241,10 +236,15 @@ class CampaignResource extends Resource
                 $query->where('user_id', auth()->id());
             });
     }
-//     public static function getEloquentQuery(): Builder
-// {
-//     return parent::getEloquentQuery();
-// }
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
+    }
 
 
 }

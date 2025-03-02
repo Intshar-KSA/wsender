@@ -11,8 +11,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Filament\Resources\ContactCatResource\Pages;
 use App\Filament\Resources\ContactCatResource\RelationManagers\ContactsRelationManager;
-
-
+use App\helper\ModelLabelHelper;
 
 class ContactCatResource extends Resource
 {
@@ -27,9 +26,8 @@ class ContactCatResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->label('Category Name'),
-                    Forms\Components\Hidden::make('user_id')
+                    ->required(),
+                Forms\Components\Hidden::make('user_id')
                     ->default(auth()->id()),
 
                 // Forms\Components\Select::make('user_id')
@@ -45,9 +43,9 @@ class ContactCatResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Category Name'),
-                // Tables\Columns\TextColumn::make('user.name')->label('User'),
-                Tables\Columns\TextColumn::make('created_at')->dateTime()->label('Created At'),
+                Tables\Columns\TextColumn::make('name'),
+                // Tables\Columns\TextColumn::make('user.name'),
+                Tables\Columns\TextColumn::make('created_at')->dateTime(),
             ])
             ->filters([
                 // Tables\Filters\Filter::make('By User')
@@ -92,6 +90,16 @@ class ContactCatResource extends Resource
         return parent::getEloquentQuery()
             ->where('user_id', auth()->id()) // تصفية السجلات الخاصة بالمستخدم الحالي
             ->with('user'); // تحميل العلاقة مع المستخدم
+    }
+
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
     }
 
 

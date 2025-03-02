@@ -8,6 +8,7 @@ use App\Models\Subscription;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Model;
 use App\Filament\Resources\AdminSubscriptionResource\Pages;
+use App\helper\ModelLabelHelper;
 
 class AdminSubscriptionResource extends Resource
 {
@@ -151,5 +152,14 @@ class AdminSubscriptionResource extends Resource
             'create' => Pages\CreateAdminSubscription::route('/create'),
             'edit' => Pages\EditAdminSubscription::route('/{record}/edit'),
         ];
+    }
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
     }
 }

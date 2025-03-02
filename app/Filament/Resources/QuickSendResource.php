@@ -23,6 +23,7 @@ use Filament\Forms\Components\NumberInput;
 use App\Filament\Resources\QuickSendResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\QuickSendResource\RelationManagers;
+use App\helper\ModelLabelHelper;
 
 class QuickSendResource extends Resource
 {
@@ -30,163 +31,124 @@ class QuickSendResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-
     protected static ?int $navigationSort = 1;
-
 
     public static function form(Form $form): Form
     {
         return $form->schema([
             Select::make('profile_id')
-                ->label('Select Device')
                 ->options(Device::all()->pluck('nickname', 'profile_id'))
                 ->searchable()
                 ->preload()
                 ->required()
-                ->helperText('Choose a device to send the message.'),
+                ->helperText(__('helperText.profile_id')),
 
             Textarea::make('message_text')
-                ->label('Message Text')
                 ->required()
                 ->rows(3)
-                ->helperText('Enter the message content to send.'),
+                ->helperText(__('helperText.message_text')),
 
             Textarea::make('phone_numbers')
-                ->label('Phone Numbers')
                 ->required()
                 ->rows(3)
-                ->helperText('Enter phone numbers, one per line.'),
+                ->helperText(__('helperText.phone_numbers')),
 
-                FileUpload::make('image')
-                ->label('Upload Image')
+            FileUpload::make('image')
                 ->image()
                 ->directory('uploads/images')
-                ->visibility('public') // تغيير إلى public
-                ->helperText('Optional: Attach an image to your message.'),
+                ->visibility('public')
+                ->helperText(__('helperText.image')),
 
             TextInput::make('timeout_from')
                 ->numeric()
                 ->default(5)
                 ->required()
-                ->label('Timeout From (seconds)')
-                ->helperText('Minimum time delay for sending messages.'),
+                ->helperText(__('helperText.timeout_from')),
 
             TextInput::make('timeout_to')
                 ->numeric()
                 ->default(8)
                 ->required()
-                ->label('Timeout To (seconds)')
-                ->helperText('Maximum time delay for sending messages.'),
+                ->helperText(__('helperText.timeout_to')),
 
             TextInput::make('file_name')
                 ->default('')
-                ->label('File Name')
                 ->hidden()
                 ->required()
-                ->helperText('Name of the uploaded file (default: картинка).'),
+                ->helperText(__('helperText.file_name')),
         ]);
     }
 
+    public static function table(Table $table): Table
+    {
+        return $table->columns([
+            TextColumn::make('profile_id')
+                ->sortable()
+                ->searchable(),
 
-public static function table(Table $table): Table
-{
-    return  $table->columns([
-        TextColumn::make('profile_id')
-            ->label('Profile ID')
-            ->sortable()
-            ->searchable(),
+            TextColumn::make('message_text')
+                ->limit(30),
 
-        TextColumn::make('message_text')
-            ->label('Message')
-            ->limit(30),
-
-        TextColumn::make('phone_numbers')
-            ->label('Phones')
-            ->limit(30)
-            ->copyable(),
+            TextColumn::make('phone_numbers')
+                ->limit(30)
+                ->copyable(),
 
             BadgeColumn::make('status')
-            ->label('Status')
-            ->colors([
-                'success' => 'started',
-                'warning' => 'paused',
-                'danger' => 'failed',
-                'gray' => 'created',
-            ])
-            ->sortable(),
+                ->colors([
+                    'success' => 'started',
+                    'warning' => 'paused',
+                    'danger' => 'failed',
+                    'gray' => 'created',
+                ])
+                ->sortable(),
 
-        TextColumn::make('created_at')
-            ->label('Created At')
-            ->dateTime()
-            ->sortable(),
+            TextColumn::make('created_at')
+                ->dateTime()
+                ->sortable(),
 
-        TextColumn::make('updated_at')
-            ->label('Updated At')
-            ->dateTime()
-            ->sortable(),
-    ])->actions([
-        Action::make('toggle_status')
-        ->label(fn ($record) => match ($record->status) {
-            'created' => 'Start',
-            'started' => 'Pause',
-            'paused' => 'Resume',
-            'resumed' => 'Pause',
-            default => 'Unknown', // للعرض الافتراضي
-        })
-        ->icon(fn ($record) => match ($record->status) {
-            'created' => 'heroicon-o-play',
-            'started' => 'heroicon-o-pause',
-            'paused' => 'heroicon-o-play',
-            'resumed' => 'heroicon-o-pause',
-            default => 'heroicon-o-question-mark-circle',
-        })
-        ->action(function ($record) {
-            try {
-                match ($record->status) {
-                    'created' => QuickSendService::startCampaign($record),
-                    'started' => QuickSendService::pauseCampaign($record),
-                    'paused' => QuickSendService::resumeCampaign($record),
-                    'resumed' => QuickSendService::pauseCampaign($record),
-                    default => throw new \Exception("Unhandled status: {$record->status}"),
-                };
-            } catch (\Exception $e) {
-                \Log::error("Error in campaign toggle: " . $e->getMessage());
-                throw $e; // إعادة رمي الاستثناء للتعامل معه في الواجهة
-            }
-        })
-        ->requiresConfirmation()
-        ->successNotificationTitle(fn ($record) => match ($record->status) {
-            'created' => 'Campaign started successfully.',
-            'started' => 'Campaign paused successfully.',
-            'paused' => 'Campaign resumed successfully.',
-        }),
-    //     Action::make('pause')
-    //     ->label('Pause')
-    //     ->icon('heroicon-o-pause')
-    //     ->action(fn ($record) => QuickSendService::pauseCampaign($record))
-    //     ->requiresConfirmation()
-    //     ->successNotificationTitle('Campaign paused successfully.'),
+            TextColumn::make('updated_at')
+                ->dateTime()
+                ->sortable(),
+        ])->actions([
+            Action::make('toggle_status')
+                ->icon(fn ($record) => match ($record->status) {
+                    'created' => 'heroicon-o-play',
+                    'started' => 'heroicon-o-pause',
+                    'paused' => 'heroicon-o-play',
+                    'resumed' => 'heroicon-o-pause',
+                    default => 'heroicon-o-question-mark-circle',
+                })
+                ->action(function ($record) {
+                    try {
+                        match ($record->status) {
+                            'created' => QuickSendService::startCampaign($record),
+                            'started' => QuickSendService::pauseCampaign($record),
+                            'paused' => QuickSendService::resumeCampaign($record),
+                            'resumed' => QuickSendService::pauseCampaign($record),
+                            default => throw new \Exception("Unhandled status: {$record->status}"),
+                        };
+                    } catch (\Exception $e) {
+                        \Log::error("Error in campaign toggle: " . $e->getMessage());
+                        throw $e;
+                    }
+                })
+                ->requiresConfirmation()
+                ->successNotificationTitle(fn ($record) => match ($record->status) {
+                    'created' => 'Campaign started successfully.',
+                    'started' => 'Campaign paused successfully.',
+                    'paused' => 'Campaign resumed successfully.',
+                }),
 
-    // Action::make('resume')
-    //     ->label('Resume')
-    //     ->icon('heroicon-o-play')
-    //     ->action(fn ($record) => QuickSendService::resumeCampaign($record))
-    //     ->requiresConfirmation()
-    //     ->successNotificationTitle('Campaign resumed successfully.'),
-
-    Action::make('delete')
-        ->label('Delete')
-        ->icon('heroicon-o-trash')
-        ->action(fn ($record) => $record->delete())
-        ->color('danger')
-        ->requiresConfirmation()
-        ->successNotificationTitle('Campaign deleted successfully.'),
-        ])
-        ->bulkActions([
+            Action::make('delete')
+                ->icon('heroicon-o-trash')
+                ->action(fn ($record) => $record->delete())
+                ->color('danger')
+                ->requiresConfirmation()
+                ->successNotificationTitle('Campaign deleted successfully.'),
+        ])->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),
-
         ]);
-}
+    }
 
     public static function getRelations(): array
     {
@@ -204,10 +166,18 @@ public static function table(Table $table): Table
         ];
     }
 
+    public static function afterCreate($record)
+    {
+        QuickSendService::createCampaign($record->toArray());
+    }
 
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
 
-public static function afterCreate($record)
-{
-    QuickSendService::createCampaign($record->toArray());
-}
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
+    }
 }

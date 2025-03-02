@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ChatBotResource\Pages;
+use App\helper\ModelLabelHelper;
 use App\Models\ChatBot;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -28,32 +29,29 @@ class ChatBotResource extends Resource
                     ->relationship('user_device', 'nickname', function (Builder $query) {
                         $query->where('user_id', auth()->id()); // تصفية الأجهزة لتكون خاصة بالمستخدم
                     })
-                    ->required()
-                    ->label('Device'),
+                    ->required(),
 
                 Forms\Components\Textarea::make('msg')
                     ->required()
-                    ->columnSpanFull()
-                    ->label('Message'),
+                    ->columnSpanFull(),
+
                 Forms\Components\Select::make('content_id')
                     ->relationship('content', 'title', function (Builder $query) {
                         $query->where('user_id', auth()->id()); // تصفية المحتويات لتكون خاصة بالمستخدم
                     })
-                    ->required()
-                    ->label('Replay'),
+                    ->required(),
 
                 Forms\Components\Select::make('type')
                     ->options([
                         'exact' => 'Exact',
                         'contains' => 'Contains',
                     ])
-                    ->required()
-                    ->label('Match Type'),
+                    ->required(),
+
                 Forms\Components\Toggle::make('status')
                     ->required()
                     ->onColor('success')
-                    ->offColor('danger')
-                    ->label('Status'),
+                    ->offColor('danger'),
 
             ]);
     }
@@ -63,19 +61,15 @@ class ChatBotResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('user_device.nickname')
-                    ->label('Device')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('content.title')
-                    ->label('Replay')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('type')
-                    ->label('Match Type')
                     ->sortable(),
 
                 Tables\Columns\ToggleColumn::make('status')
-                    ->label('Status')
                     ->onColor('success')
                     ->offColor('danger')
                     ->onIcon('heroicon-o-check-circle')
@@ -95,7 +89,6 @@ class ChatBotResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('device_id')
-                    ->label('Device')
                     ->options(function () {
                         return \App\Models\Device::where('user_id', auth()->id())
                             ->pluck('nickname', 'id')
@@ -104,7 +97,6 @@ class ChatBotResource extends Resource
                     ->searchable(),
 
                 SelectFilter::make('content_id')
-                    ->label('Replay')
                     ->options(function () {
                         return \App\Models\Content::where('user_id', auth()->id())
                             ->pluck('title', 'id')
@@ -116,15 +108,13 @@ class ChatBotResource extends Resource
                     ->options([
                         'exact' => 'Exact',
                         'contains' => 'Contains',
-                    ])
-                    ->label('Match Type'),
+                    ]),
 
                 SelectFilter::make('status')
                     ->options([
                         'on' => 'On',
                         'off' => 'Off',
-                    ])
-                    ->label('Status'),
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -158,5 +148,14 @@ class ChatBotResource extends Resource
             ->whereHas('user_device', function (Builder $query) {
                 $query->where('user_id', auth()->id());
             });
+    }
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
     }
 }

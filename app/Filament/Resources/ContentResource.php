@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContentResource\Pages;
+use App\helper\ModelLabelHelper;
 use App\Models\Content;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -29,8 +30,7 @@ class ContentResource extends Resource
                         Forms\Components\TextInput::make('title')
                             ->required()
                             ->maxLength(255)
-                            ->placeholder('Enter the title for the content')
-                            ->label('Title'),
+                            ->placeholder('Enter the title for the content'),
 
                         Forms\Components\Select::make('file_type')
                             ->options([
@@ -40,7 +40,6 @@ class ContentResource extends Resource
                                 'text' => '📝 Text',
                             ])
                             ->required()
-                            ->label('File Type')
                             ->reactive(),
                     ]),
 
@@ -48,11 +47,9 @@ class ContentResource extends Resource
                     ->required()
                     ->rows(5)
                     ->placeholder('Write a detailed description for the content...')
-                    ->label('Description')
                     ->columnSpanFull(), // اجعل الحقل يأخذ العرض الكامل
 
                 Forms\Components\FileUpload::make('file')
-                    ->label('Upload File')
                     ->directory('uploads/contents')
                     ->required()
                     ->visible(fn (callable $get) => $get('file_type') !== 'text') // إظهار فقط إذا لم يكن النوع نصًا
@@ -67,31 +64,25 @@ class ContentResource extends Resource
             ]);
     }
 
-
-
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('User')
                     ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('title')
-                    ->label('Title')
                     ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('file')
-                    ->label('File')
                     ->url(fn ($record) => asset('storage/' . $record->file), true) // رابط لتحميل الملف
                     ->formatStateUsing(fn ($state) => $state ? basename($state) : 'No File') // عرض اسم الملف
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('file_type')
-                ->badge()
-                    ->label('File Type')
+                    ->badge()
                     ->colors([
                         'success' => 'text',
                         'primary' => 'image',
@@ -107,20 +98,17 @@ class ContentResource extends Resource
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Created At')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Updated At')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('file_type')
-                    ->label('Filter by File Type')
                     ->options([
                         'video' => 'Video',
                         'image' => 'Image',
@@ -135,7 +123,6 @@ class ContentResource extends Resource
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
-
 
     public static function getRelations(): array
     {
@@ -157,5 +144,15 @@ class ContentResource extends Resource
     {
         return parent::getEloquentQuery()
             ->where('user_id', auth()->id()); // تصفية السجلات لتكون خاصة بالمستخدم الحالي
+    }
+
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
     }
 }

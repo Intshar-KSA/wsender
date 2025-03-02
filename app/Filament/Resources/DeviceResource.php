@@ -16,6 +16,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Livewire; // استيراد النوع الصحيح
 use App\Filament\Resources\DeviceResource\Pages;
+use App\helper\ModelLabelHelper;
 
 class DeviceResource extends Resource
 {
@@ -70,7 +71,6 @@ class DeviceResource extends Resource
                     ->maxLength(255)
                     ->default(null),
                 Forms\Components\Toggle::make('status')
-                    ->label('Active Status')
                     ->hidden()
                     ->default(false) // افتراضيًا غير نشط
                     ->inline(false)
@@ -86,7 +86,7 @@ class DeviceResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nickname')
                     ->searchable(),
-                    Tables\Columns\TextColumn::make('profile_id')
+                Tables\Columns\TextColumn::make('profile_id')
                     ->copyable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('webhook_url')
@@ -101,7 +101,6 @@ class DeviceResource extends Resource
                     //     return $profile['name'] ?? 'N/A';
                     // }),
                     Tables\Columns\TextColumn::make('remaining_time')
-                    ->label('Time Remaining')
                     ->badge()
                     ->getStateUsing(function (Device $record) {
                         // الحصول على الاشتراك النشط
@@ -135,31 +134,26 @@ class DeviceResource extends Resource
                         'success' => fn ($state) => is_numeric($state) && $state > 5,  // أكثر من 5 أيام
                     ]),
                 Tables\Columns\TextColumn::make('extra_data.phone')
-                    ->label('Phone Number')
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
                         return $profile['phone'] ?? 'N/A';
                     }),
                 Tables\Columns\TextColumn::make('extra_data.app_status')
-                    ->label('App Status')
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
                         return $profile['app_status'] ?? 'Unknown';
                     }),
                 Tables\Columns\TextColumn::make('extra_data.worked_days')
-                    ->label('Worked Days')
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
                         return $profile['worked_days'] ?? 0;
                     }),
                 Tables\Columns\TextColumn::make('extra_data.message_count')
-                    ->label('Message Count')
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
                         return $profile['message_count'] ?? 0;
                     }),
                 Tables\Columns\BooleanColumn::make('extra_data.authorized')
-                    ->label('Authorized')
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
                         return $profile['authorized'] ?? false;
@@ -174,7 +168,6 @@ class DeviceResource extends Resource
                     ])
             ->filters([
                 \Filament\Tables\Filters\SelectFilter::make('subscriptions.plan_id')
-                    ->label('Plan')
                     ->relationship('subscriptions', 'plan_id')
                     ->options(fn () => \App\Models\Plan::pluck('title', 'id')->toArray()),
                 // Tables\Filters\SelectFilter::make('subscriptions.plan_id')
@@ -191,7 +184,6 @@ class DeviceResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Action::make('deleteViaApi')
-                    ->label('Delete')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->icon('heroicon-o-trash')
@@ -222,7 +214,6 @@ class DeviceResource extends Resource
                         }
                     }),
                     Action::make('viewQrCode')
-                    ->label('View QR Code')
                     ->action(function ($record, $livewire) {
                         // التحقق من حالة الاشتراك
                         $activeSubscription = $record->subscriptions()
@@ -330,5 +321,13 @@ class DeviceResource extends Resource
     //     return $query;
     // }
 
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
 
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
+    }
 }
