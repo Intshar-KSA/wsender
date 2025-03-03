@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ])
     ->withSchedule(function (Schedule $schedule) {
         // جدولة الـCommand للعمل كل ساعة
-        $schedule->command('statuses:run')->everyFifteenMinutes();
+        $schedule->command('statuses:run')->everyFiveMinutes();
 
         // $schedule->command('attendance:process')->hourly();
         // $schedule->command('attendance:process')->everyMinute();
