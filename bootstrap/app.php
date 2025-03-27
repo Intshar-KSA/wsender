@@ -18,12 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         // أضف اسم الـCommand هنا
         \App\Console\Commands\RunScheduledStatuses::class,
+        \App\Console\Commands\CheckCampaignsStatus::class,
     ])
     ->withSchedule(function (Schedule $schedule) {
         // جدولة الـCommand للعمل كل ساعة
         $schedule->command('statuses:run')->everyFiveMinutes();
 
-        // $schedule->command('attendance:process')->hourly();
+        $schedule->command('campaigns:check-status')->hourly();
         // $schedule->command('attendance:process')->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions) {

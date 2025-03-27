@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Device;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -9,21 +10,40 @@ class ProxyController extends Controller
 {
     public function handle(Request $request, $any)
     {
-        // استبدال الدومين
-        $baseDomain = 'https://wappi.pro/api';
-        $originalUrl = $baseDomain . '/' . $any;
+        $profileId = $request->query('profile_id') ?? $request->input('profile_id');
 
-        // نوع الطلب (GET, POST, PUT, DELETE...)
+        if ($profileId) {
+            $device = Device::where('profile_id', $profileId)->first();
+
+            if (! $device) {
+                return response()->json(['error' => 'Device not found.'], 404);
+            }
+
+            $activeSubscription = $device->subscriptions()
+                ->where('start_date', '<=', now())
+                ->latest('start_date')
+                ->first();
+
+            $expirationDate = optional($activeSubscription)->getExpirationDate();
+
+            if (! $expirationDate || now()->greaterThanOrEqualTo($expirationDate)) {
+                return response()->json([
+                    'error' => 'Subscription expired. Device not authorized to send requests.',
+                ], 403);
+            }
+        }
+
+        // الاستمرار بتنفيذ الطلب إن كان الجهاز مفعلًا
+        $baseDomain = 'https://wappi.pro/api';
+        $originalUrl = $baseDomain.'/'.$any;
         $method = $request->method();
 
-        // إعداد الهيدر مع إضافة Authorization
+        // إعداد الهيدر مع Authorization
         $headers = $request->headers->all();
         $headers['Authorization'] = '40703bb7812b727ec01c24f2da518c407342559c';
 
-        // إنشاء HTTP Client مع الهيدر
         $http = Http::withHeaders($headers);
 
-        // إرسال الطلب
         if ($method === 'GET') {
             $response = $http->get($originalUrl, $request->query());
         } elseif (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
@@ -35,7 +55,6 @@ class ProxyController extends Controller
             return response()->json(['error' => 'Unsupported HTTP method'], 405);
         }
 
-        // إعادة الرد النهائي من الرابط الأصلي
         return response($response->body(), $response->status())
             ->withHeaders($response->headers());
     }
