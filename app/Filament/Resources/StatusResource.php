@@ -48,6 +48,7 @@ class StatusResource extends Resource
                 Forms\Components\FileUpload::make('file_url')
                     ->label('Upload Image/Video')
                     ->directory('statuses')
+                    ->disk('public')
                     ->acceptedFileTypes(['image/*', 'video/*'])
                     ->maxSize(10240) // 10MB
                     ->downloadable()
