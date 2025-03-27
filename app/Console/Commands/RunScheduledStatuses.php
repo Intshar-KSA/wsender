@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Device;
 use App\Models\Status;
 use App\Services\OtpService;
 use Illuminate\Console\Command;
@@ -15,62 +14,98 @@ class RunScheduledStatuses extends Command
 
     public function handle()
     {
-        $now = now();
-        $today = $now->toDateString(); // الحصول على تاريخ اليوم بدون وقت
+        // ضبط التوقيت على الرياض
+        $now = now('Asia/Riyadh');
+        $today = $now->toDateString();
 
-        $statuses = Status::where('start_date', '<=', $now)
+        $this->info('📅 Checking statuses...');
+        $this->info('🕒 Now: '.$now->toDateTimeString());
+        $this->info('📆 Today: '.$today);
+
+        $statuses = Status::with(['devices' => function ($query) {
+            $query->withoutGlobalScopes(); // ⬅️ تجاوز الـ scope داخل العلاقة فقط
+        }])
+        // <-- هنا التحميل المسبق
+            ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
-            ->whereTime('time', '<=', $now)
+            ->whereTime('time', '<=', $now->toTimeString())
             ->where(function ($query) use ($today) {
-                $query->whereNull('last_run_at') // تشغيل إذا لم يتم تشغيلها من قبل
-                    ->orWhereDate('last_run_at', '!=', $today); // أو إذا لم تُنفذ اليوم
+                $query->whereNull('last_run_at')
+                    ->orWhereDate('last_run_at', '!=', $today);
             })
             ->get();
 
-        foreach ($statuses as $status) {
-            // تنفيذ الحالة هنا
-            $this->pushStatueforToday($status); // استدعاء دالة تنفيذ الحالة
-            $status->update(['last_run_at' => now()]);
+        $this->info("🔍 Statuses to run: {$statuses->count()}");
 
-            $this->info("Executed Status: {$status->caption}");
+        if ($statuses->isEmpty()) {
+            $this->warn('⚠️ No statuses to run at this time.');
+
+            return;
+        }
+
+        foreach ($statuses as $status) {
+            $this->info("➡️ Running status: {$status->caption}");
+            $this->pushStatueforToday($status);
+            // $status->update(['last_run_at' => $now]);
+            $this->info("✅ Executed Status: {$status->caption}");
         }
     }
 
     private function pushStatueforToday(Status $status)
     {
-        // استرجاع الجهاز المرتبط بهذه الحالة
-        $device = Device::where('id', $status->device_id)->first();
-
-        if (! $device) {
-            Log::error("Device not found for status ID: {$status->id}");
-
-            return;
-        }
-        $whatsappService = new OtpService('aedd0dc2-8453');
-        // $whatsappService = new WhatsAppService($device->profile_id);
-
         // تحميل ملف الحالة إذا كان موجودًا
-        $imageBase64 = null;
-        if ($status->media) {
-            $imagePath = storage_path('app/'.$status->media);
-            if (file_exists($imagePath)) {
-                $imageBase64 = base64_encode(file_get_contents($imagePath));
+        try {
+            $imageBase64 = null;
+            if ($status->file_url) {
+                $filePath = storage_path('app/public/'.$status->file_url);
+                if (file_exists($filePath)) {
+                    $imageBase64 = base64_encode(file_get_contents($filePath));
+                    $this->info('🖼 File found and converted to base64');
+                } else {
+                    $this->warn("📂 File not found: {$filePath}");
+                }
             }
-        }
+            $this->info('length of devices: '.count($status->devices));
 
-        // استدعاء دالة إرسال الحالة عبر واتساب
-        $sent = $whatsappService->sendViaWhatsappWithImage(
-            '966571718153',
-            'Status Update', // نوع الحالة
-            $status->caption,
-            'This is an automated status update.',
-            $imageBase64
-        );
+            foreach ($status->devices as $device) {
+                if (! $device->status) {
+                    $this->warn("⛔ Device [{$device->id}] is not active. Skipping.");
 
-        if ($sent) {
-            Log::info("Status sent successfully: {$status->caption}");
-        } else {
-            Log::error("Failed to send status: {$status->caption}");
+                    continue;
+                }
+
+                $phone = $device->phone ?? null;
+                $profileId = $device->profile_id ?? null;
+
+                $this->info('📱 Preparing to send status...');
+                $this->info("➡️ Device ID: {$device->id}, Phone: {$phone}, Profile ID: {$profileId}");
+
+                // if (! $phone || ! $profileId) {
+                //     $this->error("❌ Missing phone or profile_id for device ID: {$device->id}");
+
+                //     continue;
+                // }
+
+                // $whatsappService = new OtpService($profileId);
+                $whatsappService = new OtpService('aedd0dc2-8453');
+
+                $sent = $whatsappService->sendViaWhatsappWithImage(
+                    // $phone,
+                    '966571718153',
+                    'Status Update',
+                    $status->caption,
+                    'This is an automated status update.',
+                    $status->file_url
+                );
+
+                if ($sent) {
+                    $this->info("✅ Sent successfully to device ID {$device->id} - {$phone}");
+                } else {
+                    $this->error("❌ Failed to send to device ID {$device->id} - {$phone}");
+                }
+            }
+        } catch (\Exception $e) {
+            $this->error('❌ Error sending status: '.$e->getMessage());
         }
     }
 }

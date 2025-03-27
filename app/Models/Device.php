@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 
 class Device extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'nickname',
         'profile_id',
@@ -29,6 +30,7 @@ class Device extends Model
         // البحث عن البيانات المطابقة بناءً على profile_id
         return $profiles->firstWhere('profile_id', $this->profile_id) ?? [];
     }
+
     // Relationship with User
     public function user()
     {
@@ -53,12 +55,15 @@ class Device extends Model
         return $this->hasMany(ChatBot::class);
     }
 
-
+    public function statuses()
+    {
+        return $this->belongsToMany(Status::class, 'device_status', 'device_id', 'status_id');
+    }
 
     protected static function booted()
-{
-    static::addGlobalScope('current_user_devices', function (Builder $builder) {
-        $builder->where('user_id', auth()->id());
-    });
-}
+    {
+        static::addGlobalScope('current_user_devices', function (Builder $builder) {
+            $builder->where('user_id', auth()->id());
+        });
+    }
 }

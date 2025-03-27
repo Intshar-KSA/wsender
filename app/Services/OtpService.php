@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -7,30 +8,26 @@ use Illuminate\Support\Facades\Log;
 class OtpService
 {
     protected string $baseUrl = 'https://login.isender360.com/api/sync/message/send';
+
     protected string $imageBaseUrl = 'https://wappi.pro/api/sync/message/img/send';
+
     protected string $profileId;
 
     public function __construct(?string $profileId = null)
     {
-        // تعيين `profile_id` تلقائيًا، وإذا لم يتم تمريره يتم استخدام القيمة الافتراضية
         $this->profileId = $profileId ?? '2fdc9526-cccd';
     }
 
-    /**
-     * 📌 إرسال OTP عبر واتساب.
-     */
     public function sendOtp(string $phone, string $message): bool
     {
         return $this->sendViaWhatsapp($phone, $message);
     }
 
-    /**
-     * 📌 إرسال رسالة نصية عبر واتساب.
-     */
     public function sendViaWhatsapp(string $phone, string $message): bool
     {
         if (empty($phone)) {
             Log::error('Phone number is missing or invalid.', ['phone' => $phone]);
+
             return false;
         }
 
@@ -49,37 +46,40 @@ class OtpService
         return $response->ok();
     }
 
-    /**
-     * 📌 إرسال رسالة عبر واتساب مع صورة.
-     */
     public function sendViaWhatsappWithImage(string $phone, string $type, string $title, string $message, ?string $imagePath = null): bool
     {
         if (empty($phone)) {
             Log::error('Phone number is missing or invalid.', ['phone' => $phone]);
+
             return false;
         }
 
-        // تكوين النص المرسل بعد الصورة
         $caption = trim("{$type}\n{$title}\n{$message}");
 
-        // إعداد البيانات الأساسية
         $payload = [
             'recipient' => $phone,
             'caption' => $caption,
         ];
 
-        // إضافة الصورة إذا كانت موجودة
-        if ($imagePath && file_exists(storage_path("app/{$imagePath}"))) {
-            $imageBase64 = base64_encode(file_get_contents(storage_path("app/{$imagePath}")));
-            $payload['b64_file'] = $imageBase64;
+        if ($imagePath) {
+            $fullPath = storage_path("app/{$imagePath}");
+            if (file_exists($fullPath)) {
+                Log::info("✅ File found at: {$fullPath}");
+                $imageBase64 = base64_encode(file_get_contents($fullPath));
+                $payload['b64_file'] = $imageBase64;
+            } else {
+                Log::warning("❌ File does not exist at: {$fullPath}");
+            }
         }
 
-        Log::info('Sending WhatsApp message with image...', [
+        Log::info('📤 Sending WhatsApp Message...', [
             'phone' => $phone,
             'type' => $type,
             'title' => $title,
             'message' => $message,
             'image' => $imagePath ? 'Included' : 'Not included',
+            'profile_id' => $this->profileId,
+            'payload' => $payload,
         ]);
 
         $response = Http::withHeaders([
@@ -88,9 +88,9 @@ class OtpService
             'Content-Type' => 'application/json',
         ])->post("{$this->imageBaseUrl}?profile_id={$this->profileId}", $payload);
 
-        Log::info('WhatsApp API Response', [
-            'status' => $response->status(),
-            'body' => $response->body(),
+        Log::info('📨 WhatsApp API Response', [
+            'status_code' => $response->status(),
+            'response_body' => $response->body(),
         ]);
 
         return $response->ok();

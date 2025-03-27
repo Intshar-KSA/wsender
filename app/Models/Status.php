@@ -33,4 +33,11 @@ class Status extends Model
     {
         return $this->is_active && now()->between($this->start_date, $this->end_date);
     }
+
+    // app/Models/Status.php
+
+    public function devices()
+    {
+        return $this->belongsToMany(Device::class, 'device_status', 'status_id', 'device_id');
+    }
 }

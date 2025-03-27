@@ -26,6 +26,13 @@ class StatusResource extends Resource
                     ->label('Caption')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\Select::make('devices')
+                    ->label('Devices')
+                    ->multiple()
+                    ->relationship('devices', 'nickname') // اسم العلاقة وعمود العرض
+                    ->preload()
+                    ->searchable()
+                    ->required(),
 
                 Forms\Components\DatePicker::make('start_date')
                     ->label('Start Date')
@@ -63,6 +70,9 @@ class StatusResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('caption')
                     ->label('Caption')
                     ->sortable()
@@ -88,6 +98,13 @@ class StatusResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->color(fn ($record) => $record->last_run_at ? 'success' : 'warning'),
+                Tables\Columns\TextColumn::make('devices_list')
+                    ->label('Devices')
+                    ->getStateUsing(function ($record) {
+                        return $record->devices->pluck('nickname')->implode(', ');
+                    })
+                    ->wrap()
+                    ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
@@ -118,6 +135,20 @@ class StatusResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                // reset last run at
+                Tables\Actions\Action::make('resetLastRun')
+                    ->label('Reset Run')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update(['last_run_at' => null]);
+                        \Filament\Notifications\Notification::make()
+                            ->title('تم تصفير وقت التنفيذ')
+                            ->success()
+                            ->send();
+                    }),
+
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
