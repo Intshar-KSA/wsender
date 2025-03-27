@@ -12,36 +12,34 @@ class ProxyController extends Controller
     {
         $profileId = $request->query('profile_id') ?? $request->input('profile_id');
 
-        if ($profileId) {
+        // إذا لم يكن البروفايل هو المستثنى، تحقق من الاشتراك
+        if ($profileId && $profileId !== 'fe2dbcb1-c531') {
             $device = Device::where('profile_id', $profileId)->first();
 
             if (! $device) {
                 return response()->json(['error' => 'Device not found.'], 404);
             }
 
-            // استثناء البروفايل المحدد من التحقق
-            if ($profileId !== 'fe2dbcb1-c531') {
-                $activeSubscription = $device->subscriptions()
-                    ->where('start_date', '<=', now())
-                    ->latest('start_date')
-                    ->first();
+            $activeSubscription = $device->subscriptions()
+                ->where('start_date', '<=', now())
+                ->latest('start_date')
+                ->first();
 
-                $expirationDate = optional($activeSubscription)->getExpirationDate();
+            $expirationDate = optional($activeSubscription)->getExpirationDate();
 
-                if (! $expirationDate || now()->greaterThanOrEqualTo($expirationDate)) {
-                    return response()->json([
-                        'error' => 'Subscription expired. Device not authorized to send requests.',
-                    ], 403);
-                }
+            if (! $expirationDate || now()->greaterThanOrEqualTo($expirationDate)) {
+                return response()->json([
+                    'error' => 'Subscription expired. Device not authorized to send requests.',
+                ], 403);
             }
         }
 
-        // الاستمرار بتنفيذ الطلب إن كان الجهاز مفعلًا أو مستثنى
+        // تنفيذ الطلب لأي بروفايل (المستثنى أو الذي اجتاز التحقق)
         $baseDomain = 'https://wappi.pro/api';
         $originalUrl = $baseDomain.'/'.$any;
+
         $method = $request->method();
 
-        // إعداد الهيدر مع Authorization
         $headers = $request->headers->all();
         $headers['Authorization'] = '40703bb7812b727ec01c24f2da518c407342559c';
 
