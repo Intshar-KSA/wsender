@@ -19,21 +19,24 @@ class ProxyController extends Controller
                 return response()->json(['error' => 'Device not found.'], 404);
             }
 
-            $activeSubscription = $device->subscriptions()
-                ->where('start_date', '<=', now())
-                ->latest('start_date')
-                ->first();
+            // استثناء البروفايل المحدد من التحقق
+            if ($profileId !== 'fe2dbcb1-c531') {
+                $activeSubscription = $device->subscriptions()
+                    ->where('start_date', '<=', now())
+                    ->latest('start_date')
+                    ->first();
 
-            $expirationDate = optional($activeSubscription)->getExpirationDate();
+                $expirationDate = optional($activeSubscription)->getExpirationDate();
 
-            if (! $expirationDate || now()->greaterThanOrEqualTo($expirationDate)) {
-                return response()->json([
-                    'error' => 'Subscription expired. Device not authorized to send requests.',
-                ], 403);
+                if (! $expirationDate || now()->greaterThanOrEqualTo($expirationDate)) {
+                    return response()->json([
+                        'error' => 'Subscription expired. Device not authorized to send requests.',
+                    ], 403);
+                }
             }
         }
 
-        // الاستمرار بتنفيذ الطلب إن كان الجهاز مفعلًا
+        // الاستمرار بتنفيذ الطلب إن كان الجهاز مفعلًا أو مستثنى
         $baseDomain = 'https://wappi.pro/api';
         $originalUrl = $baseDomain.'/'.$any;
         $method = $request->method();
