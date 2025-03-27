@@ -12,8 +12,9 @@ class ProxyController extends Controller
     {
         $profileId = $request->query('profile_id') ?? $request->input('profile_id');
 
+        $excludedProfiles = ['fe2dbcb1-c531', '2fdc9526-cccd'];
         // إذا لم يكن البروفايل هو المستثنى، تحقق من الاشتراك
-        if ($profileId && $profileId !== 'fe2dbcb1-c531') {
+        if ($profileId && ! in_array($profileId, $excludedProfiles)) {
             $device = Device::where('profile_id', $profileId)->first();
 
             if (! $device) {
