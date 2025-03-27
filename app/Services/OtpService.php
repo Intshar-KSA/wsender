@@ -62,7 +62,9 @@ class OtpService
         ];
 
         if ($imagePath) {
-            $fullPath = storage_path("app/{$imagePath}");
+            // $fullPath = storage_path("app/{$imagePath}");
+            $fullPath = storage_path('app/public/'.$imagePath);
+
             if (file_exists($fullPath)) {
                 Log::info("✅ File found at: {$fullPath}");
                 $imageBase64 = base64_encode(file_get_contents($fullPath));
@@ -71,6 +73,8 @@ class OtpService
                 Log::warning("❌ File does not exist at: {$fullPath}");
             }
         }
+        $mimeType = mime_content_type($fullPath);
+        Log::info("🔍 File MIME type: {$mimeType}");
 
         Log::info('📤 Sending WhatsApp Message...', [
             'phone' => $phone,

@@ -46,7 +46,7 @@ class RunScheduledStatuses extends Command
         foreach ($statuses as $status) {
             $this->info("➡️ Running status: {$status->caption}");
             $this->pushStatueforToday($status);
-            // $status->update(['last_run_at' => $now]);
+            $status->update(['last_run_at' => $now]);
             $this->info("✅ Executed Status: {$status->caption}");
         }
     }
