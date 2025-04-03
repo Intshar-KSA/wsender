@@ -1,10 +1,9 @@
 <?php
 
 use App\Filament\Pages\ViewQrCode;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
@@ -13,10 +12,7 @@ Route::get('/', function () {
 // Route::get('/filament/view-qr-code/{qrCodeUrl}', ViewQrCode::class)->name('filament.pages.view-qr-code');
 Route::get('/filament/view-qr-code/{qrCodeText}', ViewQrCode::class)->name('filament.pages.view-qr-code');
 
-Route::post('/webhook', [WebhookController::class, 'handle']);
-
-
-
+Route::post('/webhook', [WebhookController::class, 'handle'])->name('webhook.handle');
 
 // // Route لإرسال رابط التحقق
 // Route::get('/email/verify', function () {
