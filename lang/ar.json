@@ -13,6 +13,8 @@
     "Payment status": "حالة الدفع",
     "Approved": "موافق عليه",
     "Pending": "قيد الانتظار",
+    "Connection successful.":"تم الربط بنجاح.",
+    "This device is not available":"هذا الجهاز غير موجود",
     "Rejected": "مرفوض",
     "Transaction id": "معرف المعاملة",
     "Time remaining": "الوقت المتبقي",

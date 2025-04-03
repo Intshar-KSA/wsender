@@ -20,4 +20,9 @@ class ListContacts extends ListRecords
             ->url(ContactResource::getUrl('bulk-create')), // رابط صفحة الإنشاء الجماعي
         ];
     }
+
+    protected function getTableQuery(): ?\Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getTableQuery()->latest();
+    }
 }
