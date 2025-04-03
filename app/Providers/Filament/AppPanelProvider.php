@@ -2,8 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
@@ -56,21 +56,21 @@ class AppPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
-                FilamentShieldPlugin::make(),
+                // FilamentShieldPlugin::make(),
+                // ->authorize(fn (): bool => auth()->user()->role === 'admin'),
             ])
             ->authMiddleware([
                 Authenticate::class,
             ]);
     }
 
-//     protected function getMiddleware(): array
-// {
-//     return [
-//         'web',
-//         'auth',
-//         \App\Http\Middleware\RedirectIfNotVerified::class,
-//     ];
-// }
-
+    //     protected function getMiddleware(): array
+    // {
+    //     return [
+    //         'web',
+    //         'auth',
+    //         \App\Http\Middleware\RedirectIfNotVerified::class,
+    //     ];
+    // }
 
 }
