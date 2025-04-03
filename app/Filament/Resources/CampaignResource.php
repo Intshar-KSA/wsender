@@ -2,19 +2,18 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
-use Filament\Tables;
-use App\Models\Campaign;
-use Filament\Forms\Form;
-use App\Models\ContactCat;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
-use App\Services\CampaignService;
-use App\Services\QuickSendService;
-use Filament\Tables\Actions\Action;
-use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CampaignResource\Pages;
 use App\helper\ModelLabelHelper;
+use App\Models\Campaign;
+use App\Models\ContactCat;
+use App\Services\CampaignService;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CampaignResource extends Resource
 {
@@ -45,12 +44,9 @@ class CampaignResource extends Resource
                 Forms\Components\TextInput::make('message_every')
                     ->required()
                     ->numeric(),
-                Forms\Components\TimePicker::make('starting_time')
-                    ->required(),
-                Forms\Components\TimePicker::make('allowed_period_from')
-                    ->required(),
-                Forms\Components\TimePicker::make('allowed_period_to')
-                    ->required(),
+                Forms\Components\TimePicker::make('starting_time'),
+                Forms\Components\TimePicker::make('allowed_period_from'),
+                Forms\Components\TimePicker::make('allowed_period_to'),
                 // Forms\Components\Toggle::make('status')
                 //     ->label('Status')
                 //     ->onColor('success')
@@ -83,6 +79,7 @@ class CampaignResource extends Resource
                         }
 
                         $decoded = json_decode($state, true);
+
                         return is_array($decoded) ? implode(', ', $decoded) : 'N/A'; // إذا كانت JSON
                     })
                     ->sortable(),
@@ -112,13 +109,13 @@ class CampaignResource extends Resource
                 //     ->sortable()
                 //     ->tooltip('Click to toggle status'),
                 Tables\Columns\BadgeColumn::make('status')
-                ->colors([
-                    'success' => 'started',
-                    'warning' => 'paused',
-                    'danger' => 'failed',
-                    'gray' => 'created',
-                ])
-                ->sortable(),
+                    ->colors([
+                        'success' => 'started',
+                        'warning' => 'paused',
+                        'danger' => 'failed',
+                        'gray' => 'created',
+                    ])
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -170,40 +167,40 @@ class CampaignResource extends Resource
 
             ->actions([
                 Action::make('toggle_status')
-                ->label(fn ($record) => match ($record->status) {
-                    'created' => 'Start',
-                    'started' => 'Pause',
-                    'paused' => 'Resume',
-                    'resumed' => 'Pause',
-                    default => 'Unknown', // للعرض الافتراضي
-                })
-                ->icon(fn ($record) => match ($record->status) {
-                    'created' => 'heroicon-o-play',
-                    'started' => 'heroicon-o-pause',
-                    'paused' => 'heroicon-o-play',
-                    'resumed' => 'heroicon-o-pause',
-                    default => 'heroicon-o-question-mark-circle',
-                })
-                ->action(function ($record) {
-                    try {
-                        match ($record->status) {
-                            'created' => CampaignService::createCampaignFromCampaignsTable($record),
-                            'started' => CampaignService::pauseCampaign($record),
-                            'paused' => CampaignService::resumeCampaign($record),
-                            'resumed' => CampaignService::pauseCampaign($record),
-                            default => throw new \Exception("Unhandled status: {$record->status}"),
-                        };
-                    } catch (\Exception $e) {
-                        \Log::error("Error in campaign toggle: " . $e->getMessage());
-                        throw $e; // إعادة رمي الاستثناء للتعامل معه في الواجهة
-                    }
-                })
-                ->requiresConfirmation()
-                ->successNotificationTitle(fn ($record) => match ($record->status) {
-                    'created' => 'Campaign started successfully.',
-                    'started' => 'Campaign paused successfully.',
-                    'paused' => 'Campaign resumed successfully.',
-                }),
+                    ->label(fn ($record) => match ($record->status) {
+                        'created' => 'Start',
+                        'started' => 'Pause',
+                        'paused' => 'Resume',
+                        'resumed' => 'Pause',
+                        default => 'Unknown', // للعرض الافتراضي
+                    })
+                    ->icon(fn ($record) => match ($record->status) {
+                        'created' => 'heroicon-o-play',
+                        'started' => 'heroicon-o-pause',
+                        'paused' => 'heroicon-o-play',
+                        'resumed' => 'heroicon-o-pause',
+                        default => 'heroicon-o-question-mark-circle',
+                    })
+                    ->action(function ($record) {
+                        try {
+                            match ($record->status) {
+                                'created' => CampaignService::createCampaignFromCampaignsTable($record),
+                                'started' => CampaignService::pauseCampaign($record),
+                                'paused' => CampaignService::resumeCampaign($record),
+                                'resumed' => CampaignService::pauseCampaign($record),
+                                default => throw new \Exception("Unhandled status: {$record->status}"),
+                            };
+                        } catch (\Exception $e) {
+                            \Log::error('Error in campaign toggle: '.$e->getMessage());
+                            throw $e; // إعادة رمي الاستثناء للتعامل معه في الواجهة
+                        }
+                    })
+                    ->requiresConfirmation()
+                    ->successNotificationTitle(fn ($record) => match ($record->status) {
+                        'created' => 'Campaign started successfully.',
+                        'started' => 'Campaign paused successfully.',
+                        'paused' => 'Campaign resumed successfully.',
+                    }),
                 // Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -229,13 +226,14 @@ class CampaignResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        \Log::info('Fetching campaigns for user_id: ' . auth()->id());
+        \Log::info('Fetching campaigns for user_id: '.auth()->id());
 
         return parent::getEloquentQuery()
             ->whereHas('user_device', function (Builder $query) {
                 $query->where('user_id', auth()->id());
             });
     }
+
     public static function getModelLabel(): string
     {
         return ModelLabelHelper::getModelLabel(static::$model);
@@ -245,6 +243,4 @@ class CampaignResource extends Resource
     {
         return ModelLabelHelper::getPluralModelLabel(static::$model);
     }
-
-
 }

@@ -36,11 +36,11 @@ class StatusResource extends Resource
 
                 Forms\Components\DatePicker::make('start_date')
                     ->label('Start Date')
-                    ->required(),
+                    ->nullable(), // ✅ اجعل الحقل اختياري
 
                 Forms\Components\DatePicker::make('end_date')
                     ->label('End Date')
-                    ->required(),
+                    ->nullable(), // ✅ اجعل الحقل اختياري
 
                 Forms\Components\TimePicker::make('time')
                     ->label('Execution Time')

@@ -17,6 +17,13 @@ class CreateStatus extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+
+        // ✅ ضبط التاريخ الحالي إذا لم يُحدد من قبل المستخدم
+        $now = now();
+
+        $data['start_date'] = $data['start_date'] ?? $now->copy()->toDateString();
+        $data['end_date'] = $data['end_date'] ?? $now->copy()->toDateString();
+
         $this->record = Status::create(collect($data)->except('devices')->toArray());
 
         if (isset($data['devices'])) {
