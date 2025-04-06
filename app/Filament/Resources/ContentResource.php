@@ -9,7 +9,6 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -52,6 +51,7 @@ class ContentResource extends Resource
                 Forms\Components\FileUpload::make('file')
                     ->directory('uploads/contents')
                     ->required()
+                    ->disk('public')
                     ->visible(fn (callable $get) => $get('file_type') !== 'text') // إظهار فقط إذا لم يكن النوع نصًا
                     ->imagePreviewHeight('100') // معاينة الصور
                     ->downloadable() // تفعيل تنزيل الملفات
@@ -77,7 +77,7 @@ class ContentResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('file')
-                    ->url(fn ($record) => asset('storage/' . $record->file), true) // رابط لتحميل الملف
+                    ->url(fn ($record) => asset('storage/'.$record->file), true) // رابط لتحميل الملف
                     ->formatStateUsing(fn ($state) => $state ? basename($state) : 'No File') // عرض اسم الملف
                     ->searchable(),
 
