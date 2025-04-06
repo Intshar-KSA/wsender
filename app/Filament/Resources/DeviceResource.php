@@ -3,20 +3,20 @@
 namespace App\Filament\Resources;
 
 // use livewire ;
-use Filament\Forms;
-use Filament\Tables;
-use App\Models\Device;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
-use Illuminate\Support\Collection;
-use Filament\Tables\Actions\Action;
-use App\Services\ExternalApiService;
-use Filament\Notifications\Notification;
-use Illuminate\Database\Eloquent\Builder;
-use Livewire\Livewire; // استيراد النوع الصحيح
 use App\Filament\Resources\DeviceResource\Pages;
 use App\helper\ModelLabelHelper;
+use App\Models\Device;
+use App\Services\ExternalApiService;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder; // استيراد النوع الصحيح
+use Illuminate\Support\Collection;
+use Livewire\Livewire;
 
 class DeviceResource extends Resource
 {
@@ -26,7 +26,7 @@ class DeviceResource extends Resource
 
     protected static ?int $navigationSort = -2;
 
-    public static Collection $profiles;// لتخزين البيانات المحملة
+    public static Collection $profiles; // لتخزين البيانات المحملة
 
     public static function loadProfiles(): void
     {
@@ -82,6 +82,7 @@ class DeviceResource extends Resource
     public static function table(Table $table): Table
     {
         self::loadProfiles();
+
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('nickname')
@@ -94,13 +95,14 @@ class DeviceResource extends Resource
                 // Tables\Columns\BooleanColumn::make('status')
                 //     ->label('Active')
                 //     ->sortable(),
-                    // Tables\Columns\TextColumn::make('extra_data.name')
-                    // ->label('Profile Name')
-                    // ->getStateUsing(function (Device $record) {
-                    //     $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
-                    //     return $profile['name'] ?? 'N/A';
-                    // }),
-                    Tables\Columns\TextColumn::make('remaining_time')
+                // Tables\Columns\TextColumn::make('extra_data.name')
+                // ->label('Profile Name')
+                // ->getStateUsing(function (Device $record) {
+                //     $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+                //     return $profile['name'] ?? 'N/A';
+                // }),
+                Tables\Columns\TextColumn::make('remaining_time')
+                    ->label(_('Remaining Time'))
                     ->badge()
                     ->getStateUsing(function (Device $record) {
                         // الحصول على الاشتراك النشط
@@ -108,7 +110,7 @@ class DeviceResource extends Resource
                             ->where('start_date', '<=', now()) // الاشتراك بدأ
                             ->latest('start_date') // أحدث اشتراك
                             ->first();
-                            // dd($activeSubscription);
+                        // dd($activeSubscription);
 
                         if ($activeSubscription) {
                             // حساب تاريخ انتهاء الاشتراك باستخدام الدالة
@@ -118,7 +120,7 @@ class DeviceResource extends Resource
                                 $remainingDays = now()->diffInDays($expirationDate);
 
                                 return $remainingDays > 0
-                                    ? (round($remainingDays)) . ' days remaining'
+                                    ? (round($remainingDays)).' days remaining'
                                     : 'Less than a day remaining';
                             }
 
@@ -134,28 +136,38 @@ class DeviceResource extends Resource
                         'success' => fn ($state) => is_numeric($state) && $state > 5,  // أكثر من 5 أيام
                     ]),
                 Tables\Columns\TextColumn::make('extra_data.phone')
+                    ->label(_('Phone'))
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+
                         return $profile['phone'] ?? 'N/A';
                     }),
                 Tables\Columns\TextColumn::make('extra_data.app_status')
+                    ->label(_('App Status'))
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+
                         return $profile['app_status'] ?? 'Unknown';
                     }),
                 Tables\Columns\TextColumn::make('extra_data.worked_days')
+                    ->label(_('Worked Days'))
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+
                         return $profile['worked_days'] ?? 0;
                     }),
                 Tables\Columns\TextColumn::make('extra_data.message_count')
+                    ->label(_('Message Count'))
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+
                         return $profile['message_count'] ?? 0;
                     }),
                 Tables\Columns\BooleanColumn::make('extra_data.authorized')
+                    ->label(_('Is Connected'))
                     ->getStateUsing(function (Device $record) {
                         $profile = self::$profiles->firstWhere('profile_id', $record->profile_id);
+
                         return $profile['authorized'] ?? false;
                     }),
                 // Tables\Columns\TextColumn::make('extra_data.webhook_url')
@@ -165,7 +177,7 @@ class DeviceResource extends Resource
                 //         return $profile['webhook_url'] ?? 'N/A';
                 //     }),
 
-                    ])
+            ])
             ->filters([
                 \Filament\Tables\Filters\SelectFilter::make('subscriptions.plan_id')
                     ->relationship('subscriptions', 'plan_id')
@@ -213,7 +225,7 @@ class DeviceResource extends Resource
                             // $this->notify('danger', 'حدث خطأ أثناء عملية الحذف.');
                         }
                     }),
-                    Action::make('viewQrCode')
+                Action::make('viewQrCode')
                     ->action(function ($record, $livewire) {
                         // التحقق من حالة الاشتراك
                         $activeSubscription = $record->subscriptions()
@@ -224,13 +236,14 @@ class DeviceResource extends Resource
                         if ($activeSubscription) {
                             $expirationDate = $activeSubscription->getExpirationDate();
 
-                            if (!$expirationDate || now()->greaterThanOrEqualTo($expirationDate)) {
+                            if (! $expirationDate || now()->greaterThanOrEqualTo($expirationDate)) {
                                 // الاشتراك منتهي
                                 Notification::make()
                                     ->title('انتهاء الاشتراك')
                                     ->body('انتهى اشتراك الجهاز. يُرجى الاشتراك من جديد.')
                                     ->warning()
                                     ->send();
+
                                 return;
                             }
                         } else {
@@ -240,6 +253,7 @@ class DeviceResource extends Resource
                                 ->body('هذا الجهاز ليس لديه اشتراك نشط. يُرجى الاشتراك لتتمكن من عرض QR Code.')
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 

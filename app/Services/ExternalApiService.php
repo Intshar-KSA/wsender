@@ -35,8 +35,8 @@ class ExternalApiService
 
     public function getProfiles()
     {
-        $response = Http::withHeaders($this->headers)->get($this->baseUrl."/profile/all/get");
-        \Log::info('response: ' . $response->body());
+        $response = Http::withHeaders($this->headers)->timeout(30)->get($this->baseUrl.'/profile/all/get');
+        \Log::info('response: '.$response->body());
         if ($response->ok()) {
             return $response->json()['profiles'];
         }
@@ -46,28 +46,29 @@ class ExternalApiService
 
     public function deleteProfile(string $profileId)
     {
-        $url = $this->baseUrl . '/profile/delete?profile_id=' . urlencode($profileId);
+        $url = $this->baseUrl.'/profile/delete?profile_id='.urlencode($profileId);
 
         $response = Http::withHeaders($this->headers)->post($url);
 
-        \Log::info('response: ' . $response->body());
+        \Log::info('response: '.$response->body());
         if ($response->successful()) {
             return $response->json();
         }
 
-          // التحقق من نوع الخطأ في الاستجابة
-    $responseBody = $response->json();
-    if (isset($responseBody['status']) && $responseBody['status'] === 'error' && $responseBody['detail'] === 'Profile not found') {
-        \Log::warning("Profile not found for ID: {$profileId}. Proceeding with local deletion.");
-        return ['status' => 'done', 'detail' => 'Profile not found']; // السماح بالحذف المحلي
-    }
+        // التحقق من نوع الخطأ في الاستجابة
+        $responseBody = $response->json();
+        if (isset($responseBody['status']) && $responseBody['status'] === 'error' && $responseBody['detail'] === 'Profile not found') {
+            \Log::warning("Profile not found for ID: {$profileId}. Proceeding with local deletion.");
 
-        throw new \Exception('Failed to delete profile via API. Response: ' . $response->body());
+            return ['status' => 'done', 'detail' => 'Profile not found']; // السماح بالحذف المحلي
+        }
+
+        throw new \Exception('Failed to delete profile via API. Response: '.$response->body());
     }
 
     public function getQrCode(string $profileId)
     {
-        $url = $this->baseUrl . '/sync/qr/get?profile_id=' . urlencode($profileId);
+        $url = $this->baseUrl.'/sync/qr/get?profile_id='.urlencode($profileId);
 
         $response = Http::withHeaders($this->headers)->get($url);
 
@@ -75,12 +76,12 @@ class ExternalApiService
             return $response->json();
         }
 
-        throw new \Exception('Failed to get QR code via API. Response: ' . $response->body());
+        throw new \Exception('Failed to get QR code via API. Response: '.$response->body());
     }
 
     public function sendMessage(string $profileId, string $recipient, string $body)
     {
-        $url = $this->baseUrl . '/sync/message/send?profile_id=' . urlencode($profileId);
+        $url = $this->baseUrl.'/sync/message/send?profile_id='.urlencode($profileId);
 
         $response = Http::withHeaders($this->headers)->post($url, [
             'body' => $body,
@@ -91,12 +92,12 @@ class ExternalApiService
             return $response->json();
         }
 
-        throw new \Exception('Failed to send message via API. Response: ' . $response->body());
+        throw new \Exception('Failed to send message via API. Response: '.$response->body());
     }
 
     public function sendImage(string $profileId, string $recipient, string $caption, string $b64_file)
     {
-        $url = $this->baseUrl . '/sync/message/img/send?profile_id=' . urlencode($profileId);
+        $url = $this->baseUrl.'/sync/message/img/send?profile_id='.urlencode($profileId);
 
         $response = Http::withHeaders($this->headers)->post($url, [
             'recipient' => $recipient,
@@ -108,12 +109,12 @@ class ExternalApiService
             return $response->json();
         }
 
-        throw new \Exception('Failed to send image via API. Response: ' . $response->body());
+        throw new \Exception('Failed to send image via API. Response: '.$response->body());
     }
 
     public function sendDocument(string $profileId, string $recipient, string $caption, string $file_name, string $b64_file)
     {
-        $url = $this->baseUrl . '/sync/message/document/send?profile_id=' . urlencode($profileId);
+        $url = $this->baseUrl.'/sync/message/document/send?profile_id='.urlencode($profileId);
 
         $response = Http::withHeaders($this->headers)->post($url, [
             'recipient' => $recipient,
@@ -126,16 +127,14 @@ class ExternalApiService
             return $response->json();
         }
 
-        throw new \Exception('Failed to send document via API. Response: ' . $response->body());
+        throw new \Exception('Failed to send document via API. Response: '.$response->body());
     }
 
-
     public function setWebhookUrl(string $profileId, string $url, string $auth)
-{
-    $apiUrl = "https://wappi.pro/api/webhook/url/set";
-    $response = Http::withHeaders($this->headers)->post("{$apiUrl}?profile_id={$profileId}&url={$url}&auth={$auth}");
+    {
+        $apiUrl = 'https://wappi.pro/api/webhook/url/set';
+        $response = Http::withHeaders($this->headers)->post("{$apiUrl}?profile_id={$profileId}&url={$url}&auth={$auth}");
 
-    return $response->json();
-}
-
+        return $response->json();
+    }
 }
