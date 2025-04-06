@@ -111,7 +111,9 @@ class AdminSubscriptionResource extends Resource
                     ->label('Payment Method'),
                 Tables\Columns\TextColumn::make('receipt_url')
                     ->label('Receipt')
-                    ->url(fn ($record) => $record->receipt_url ?? '', true),
+                    ->url(fn ($record) => $record->receipt_url ? asset('storage/'.$record->receipt_url) : null, true)
+                    ->openUrlInNewTab(),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created At')
                     ->dateTime()

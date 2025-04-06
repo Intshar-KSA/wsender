@@ -82,7 +82,9 @@ class SubscriptionResource extends Resource
                     ->getStateUsing(fn ($record) => $record->payment_method ?? 'N/A'),
                 Tables\Columns\TextColumn::make('transaction_id'),
                 Tables\Columns\TextColumn::make('receipt_url')
-                    ->url(fn ($record) => $record->receipt_url ?? '', true),
+                    ->label('Receipt')
+                    ->url(fn ($record) => $record->receipt_url ? asset('storage/'.$record->receipt_url) : null, true)
+                    ->openUrlInNewTab(),
                 Tables\Columns\TextColumn::make('remaining_time')
                     ->badge()
                     ->getStateUsing(function (Subscription $record) {
