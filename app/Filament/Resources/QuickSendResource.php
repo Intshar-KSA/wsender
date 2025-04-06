@@ -50,6 +50,7 @@ class QuickSendResource extends Resource
 
             FileUpload::make('image')
                 // ->image()
+                ->disk('public')
                 ->directory('uploads/images')
                 ->visibility('public')
                 ->helperText(__('helperText.image')),
