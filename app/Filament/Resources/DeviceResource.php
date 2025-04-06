@@ -30,9 +30,19 @@ class DeviceResource extends Resource
 
     public static function loadProfiles(): void
     {
-        if (empty(self::$profiles)) {
-            $apiService = app(\App\Services\ExternalApiService::class);
-            self::$profiles = collect($apiService->getProfiles());
+        // if (empty(self::$profiles)) {
+        //     $apiService = app(\App\Services\ExternalApiService::class);
+        //     self::$profiles = collect($apiService->getProfiles());
+        // }
+
+        try {
+            if (empty(self::$profiles)) {
+                $apiService = app(\App\Services\ExternalApiService::class);
+                self::$profiles = collect($apiService->getProfiles());
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to load profiles: '.$e->getMessage());
+            self::$profiles = collect(); // fallback to empty
         }
     }
 

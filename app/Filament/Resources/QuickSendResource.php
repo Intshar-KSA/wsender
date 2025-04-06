@@ -2,28 +2,22 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
-use Filament\Tables;
+use App\Filament\Resources\QuickSendResource\Pages;
+use App\helper\ModelLabelHelper;
 use App\Models\Device;
-use Filament\Forms\Form;
 use App\Models\QuickSend;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
 use App\Services\QuickSendService;
-use Filament\Tables\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\BadgeColumn;
-use Filament\Forms\Components\FileUpload;
-use Illuminate\Database\Eloquent\Builder;
-use Filament\Forms\Components\NumberInput;
-
-use App\Filament\Resources\QuickSendResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\QuickSendResource\RelationManagers;
-use App\helper\ModelLabelHelper;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class QuickSendResource extends Resource
 {
@@ -37,6 +31,7 @@ class QuickSendResource extends Resource
     {
         return $form->schema([
             Select::make('profile_id')
+                ->label(__('Select Device'))
                 ->options(Device::all()->pluck('nickname', 'profile_id'))
                 ->searchable()
                 ->preload()
@@ -54,7 +49,7 @@ class QuickSendResource extends Resource
                 ->helperText(__('helperText.phone_numbers')),
 
             FileUpload::make('image')
-                ->image()
+                // ->image()
                 ->directory('uploads/images')
                 ->visibility('public')
                 ->helperText(__('helperText.image')),
@@ -128,7 +123,7 @@ class QuickSendResource extends Resource
                             default => throw new \Exception("Unhandled status: {$record->status}"),
                         };
                     } catch (\Exception $e) {
-                        \Log::error("Error in campaign toggle: " . $e->getMessage());
+                        \Log::error('Error in campaign toggle: '.$e->getMessage());
                         throw $e;
                     }
                 })
