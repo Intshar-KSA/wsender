@@ -134,6 +134,10 @@ class AdminSubscriptionResource extends Resource
                     }),
             ])
             ->actions([
+                Tables\Actions\Action::make('view')
+                    ->label('View')
+                    ->url(fn ($record) => AdminSubscriptionResource::getUrl('view', ['record' => $record]))
+                    ->icon('heroicon-o-eye'),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('Approve Payment')
                     ->label('Approve')
@@ -167,7 +171,9 @@ class AdminSubscriptionResource extends Resource
         return [
             'index' => Pages\ListAdminSubscriptions::route('/'),
             'create' => Pages\CreateAdminSubscription::route('/create'),
+
             'edit' => Pages\EditAdminSubscription::route('/{record}/edit'),
+            'view' => Pages\ViewAdminSubscription::route('/{record}/view'),
         ];
     }
 

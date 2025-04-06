@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StatusResource\Pages;
+use App\helper\ModelLabelHelper;
 use App\Models\Status;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -19,7 +20,7 @@ class StatusResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('title')
-                    ->label('Title')
+                    ->label(_('Title'))
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('caption')
@@ -27,7 +28,7 @@ class StatusResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Select::make('devices')
-                    ->label('Devices')
+                    ->label(_('Devices'))
                     ->multiple()
                     ->relationship('devices', 'nickname') // اسم العلاقة وعمود العرض
                     ->preload()
@@ -35,15 +36,15 @@ class StatusResource extends Resource
                     ->required(),
 
                 Forms\Components\DatePicker::make('start_date')
-                    ->label('Start Date')
+                    ->label(_('Start Date'))
                     ->nullable(), // ✅ اجعل الحقل اختياري
 
                 Forms\Components\DatePicker::make('end_date')
-                    ->label('End Date')
+                    ->label(_('End Date'))
                     ->nullable(), // ✅ اجعل الحقل اختياري
 
                 Forms\Components\TimePicker::make('time')
-                    ->label('Execution Time')
+                    ->label(_('Execution Time'))
                     ->required(),
                 Forms\Components\FileUpload::make('file_url')
                     ->label('Upload Image/Video')
@@ -55,7 +56,7 @@ class StatusResource extends Resource
                     ->openable(),
 
                 Forms\Components\Toggle::make('is_active')
-                    ->label('Active Status')
+                    ->label(_('Active Status'))
                     ->default(true)
                     ->inline(false),
 
@@ -80,27 +81,27 @@ class StatusResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('start_date')
-                    ->label('Start Date')
+                    ->label(_('Start Date'))
                     ->date()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('end_date')
-                    ->label('End Date')
+                    ->label(_('End Date'))
                     ->date()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('time')
-                    ->label('Execution Time')
+                    ->label(_('Execution Time'))
                     ->time()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('last_run_at')
-                    ->label('Last Run At')
+                    ->label(_('Last Run At'))
                     ->dateTime()
                     ->sortable()
                     ->color(fn ($record) => $record->last_run_at ? 'success' : 'warning'),
                 Tables\Columns\TextColumn::make('devices_list')
-                    ->label('Devices')
+                    ->label(_('Devices'))
                     ->getStateUsing(function ($record) {
                         return $record->devices->pluck('nickname')->implode(', ');
                     })
@@ -108,18 +109,18 @@ class StatusResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('status')
-                    ->label('Status')
+                    ->label(_('Status'))
                     ->getStateUsing(fn ($record) => $record->isActive() ? 'Active' : 'Inactive')
                     ->colors([
                         'success' => fn ($state) => $state === 'Active',
                         'danger' => fn ($state) => $state === 'Inactive',
                     ]),
                 Tables\Columns\BooleanColumn::make('is_active')
-                    ->label('Is Active')
+                    ->label(_('Is Active'))
                     ->sortable(),
 
                 Tables\Columns\ImageColumn::make('file_url')
-                    ->label('File')
+                    ->label(_('File'))
                     ->square()
                     ->disk('public') // إذا كنت تستخدم التخزين العام
                     ->hidden(fn ($record) => empty($record->file_url)),
@@ -131,7 +132,7 @@ class StatusResource extends Resource
             ])
             ->filters([
                 Tables\Filters\Filter::make('active_status')
-                    ->label('Active Status')
+                    ->label(_('Active Status'))
                     ->query(fn ($query) => $query->where('is_active', true)),
             ])
             ->actions([
@@ -168,5 +169,15 @@ class StatusResource extends Resource
             'create' => Pages\CreateStatus::route('/create'),
             'edit' => Pages\EditStatus::route('/{record}/edit'),
         ];
+    }
+
+    public static function getModelLabel(): string
+    {
+        return ModelLabelHelper::getModelLabel(static::$model);
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return ModelLabelHelper::getPluralModelLabel(static::$model);
     }
 }

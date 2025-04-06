@@ -18,6 +18,30 @@
     "Worked Days": "عدد الايام",
     "Remaining Time": "الوقت المتبقي",
     "Select Device": "اختر الجهاز",
+    "Statuses": "حالات الواتساب",
+
+    "Title": "العنوان",
+    "Caption": "الوصف",
+    "Devices": "الأجهزة",
+    "Start Date": "تاريخ البدء",
+    "End Date": "تاريخ الانتهاء",
+    "Execution Time": "وقت التنفيذ",
+    "Upload Image/Video": "رفع صورة / فيديو",
+    "Active Status": "الحالة النشطة",
+    "Last Run At": "آخر وقت تنفيذ",
+    "ID": "المعرف",
+
+    "Is Active": "نشط؟",
+
+    "File URL": "رابط الملف",
+    "Active": "نشط",
+    "Inactive": "غير نشط",
+    "Reset Run": "إعادة التهيئة",
+    "Reset Last Run": "تصفير وقت التنفيذ",
+    "Edit": "تعديل",
+
+    "Active Status (فلتر)": "الحالة النشطة (فلتر)",
+
     "Connection successful.":"تم الربط بنجاح.",
     "This device is not available":"هذا الجهاز غير موجود",
     "Rejected": "مرفوض",
