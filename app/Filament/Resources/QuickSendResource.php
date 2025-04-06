@@ -88,6 +88,16 @@ class QuickSendResource extends Resource
             TextColumn::make('phone_numbers')
                 ->limit(30)
                 ->copyable(),
+            TextColumn::make('image')
+                ->label(__('Image'))
+                ->formatStateUsing(function ($state) {
+                    return $state
+                        ? asset('storage/'.$state)
+                        : null;
+                })
+                ->url(fn ($record) => $record->image ? asset('storage/'.$record->image) : null, true)
+                ->openUrlInNewTab()
+                ->visible(fn ($record) => ! empty($record->image)),
 
             BadgeColumn::make('status')
                 ->colors([
