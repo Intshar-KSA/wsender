@@ -2,13 +2,12 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
-use Filament\Tables;
-use App\Models\Subscription;
-use Filament\Resources\Resource;
-use Illuminate\Database\Eloquent\Model;
 use App\Filament\Resources\AdminSubscriptionResource\Pages;
 use App\helper\ModelLabelHelper;
+use App\Models\Subscription;
+use Filament\Forms;
+use Filament\Resources\Resource;
+use Filament\Tables;
 
 class AdminSubscriptionResource extends Resource
 {
@@ -35,11 +34,26 @@ class AdminSubscriptionResource extends Resource
                 Forms\Components\Select::make('user_id')
                     ->relationship('user', 'name')
                     ->label('User')
-                    ->required(),
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(function (callable $set) {
+                        // تصفير الجهاز عند تغيير المستخدم
+                        $set('device_id', null);
+                    }),
+
                 Forms\Components\Select::make('device_id')
-                    ->relationship('device', 'nickname')
                     ->label('Device')
-                    ->required(),
+                    ->required()
+                    ->options(fn (callable $get) => \App\Models\Device::withoutGlobalScopes()
+                        ->where('user_id', $get('user_id'))
+                        ->pluck('nickname', 'id')
+                        ->toArray()
+                    )
+                    ->searchable()
+                    ->reactive()
+                    ->disabled(fn (callable $get) => ! $get('user_id'))
+                    ->hint('Select a user first'),
+
                 Forms\Components\Select::make('plan_id')
                     ->relationship('plan', 'title')
                     ->label('Plan')
@@ -57,6 +71,7 @@ class AdminSubscriptionResource extends Resource
                 Forms\Components\FileUpload::make('receipt_url')
                     ->label('Upload Receipt')
                     ->directory('receipts')
+                    ->disk('public')
                     ->downloadable()
                     ->openable()
                     ->visible(fn (callable $get) => $get('payment_method') === 'receipt')
@@ -153,6 +168,7 @@ class AdminSubscriptionResource extends Resource
             'edit' => Pages\EditAdminSubscription::route('/{record}/edit'),
         ];
     }
+
     public static function getModelLabel(): string
     {
         return ModelLabelHelper::getModelLabel(static::$model);

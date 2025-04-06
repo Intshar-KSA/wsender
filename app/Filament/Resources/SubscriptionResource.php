@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
-use Filament\Tables;
-use App\Models\Payment;
-use App\Models\Subscription;
-use Filament\Resources\Resource;
 use App\Filament\Resources\SubscriptionResource\Pages;
 use App\helper\ModelLabelHelper;
+use App\Models\Payment;
+use App\Models\Subscription;
+use Filament\Forms;
+use Filament\Resources\Resource;
+use Filament\Tables;
 
 class SubscriptionResource extends Resource
 {
@@ -46,6 +46,7 @@ class SubscriptionResource extends Resource
                 Forms\Components\FileUpload::make('receipt_url')
                     ->directory('receipts')
                     ->downloadable()
+                    ->disk('public')
                     ->openable()
                     ->visible(fn (callable $get) => $get('payment_method') === 'receipt')
                     ->required(),
@@ -81,17 +82,19 @@ class SubscriptionResource extends Resource
                     ->getStateUsing(fn ($record) => $record->payment_method ?? 'N/A'),
                 Tables\Columns\TextColumn::make('transaction_id'),
                 Tables\Columns\TextColumn::make('receipt_url')
-                    ->url(fn ($record) => $record->receipt_url ?? "", true),
+                    ->url(fn ($record) => $record->receipt_url ?? '', true),
                 Tables\Columns\TextColumn::make('remaining_time')
                     ->badge()
                     ->getStateUsing(function (Subscription $record) {
                         $expirationDate = $record->getExpirationDate();
                         if ($expirationDate && now()->lessThan($expirationDate)) {
                             $remainingDays = now()->diffInDays($expirationDate);
+
                             return $remainingDays > 0
                                 ? (round($remainingDays)).' days remaining'
                                 : 'Less than a day remaining';
                         }
+
                         return 'Expired';
                     })
                     ->sortable()
@@ -117,29 +120,29 @@ class SubscriptionResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                // Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('Subscribe Online')
                     ->color('primary')
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         if ($record->payment_method === 'online') {
-                            return redirect('https://payment-gateway.com/pay?amount=' . $record->plan->price . '&subscription_id=' . $record->id);
+                            return redirect('https://payment-gateway.com/pay?amount='.$record->plan->price.'&subscription_id='.$record->id);
                         }
                     })
                     ->visible(fn ($record) => $record->payment_method === 'online' && $record->payment_status === 'pending'),
-                Tables\Actions\Action::make('Approve Payment')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->action(fn ($record) => $record->update(['payment_status' => 'approved']))
-                    ->visible(fn ($record) => $record->payment_method === 'receipt' && $record->payment_status === 'pending'),
-                Tables\Actions\Action::make('Reject Payment')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->action(fn ($record) => $record->update(['payment_status' => 'rejected']))
-                    ->visible(fn ($record) => $record->payment_method === 'receipt' && $record->payment_status === 'pending'),
+                // Tables\Actions\Action::make('Approve Payment')
+                //     ->color('success')
+                //     ->requiresConfirmation()
+                //     ->action(fn ($record) => $record->update(['payment_status' => 'approved']))
+                //     ->visible(fn ($record) => $record->payment_method === 'receipt' && $record->payment_status === 'pending'),
+                // Tables\Actions\Action::make('Reject Payment')
+                //     ->color('danger')
+                //     ->requiresConfirmation()
+                //     ->action(fn ($record) => $record->update(['payment_status' => 'rejected']))
+                //     ->visible(fn ($record) => $record->payment_method === 'receipt' && $record->payment_status === 'pending'),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                // Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 
