@@ -38,7 +38,6 @@ class WebhookController extends Controller
 
             $userInfo = $this->getUserByUserProfile($profile_id);
 
-
             if ($userInfo !== null) {
                 \Log::info('User Info: ', $userInfo);
                 $user_name = $userInfo['name'];
@@ -81,6 +80,7 @@ class WebhookController extends Controller
                 // Add other necessary fields from the device or user
             ];
         }
+        \Log::error('Device not found for profile_id: '.$profile_id);
 
         return null;
     }
