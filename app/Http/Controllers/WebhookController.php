@@ -92,7 +92,10 @@ class WebhookController extends Controller
 
     private function getUserByUserProfile($profile_id)
     {
-        $device = Device::where('profile_id', $profile_id)->with('user')->first();
+        $device = Device::withoutGlobalScopes()
+            ->where('profile_id', $profile_id)
+            ->with('user')
+            ->first();
 
         if (! $device) {
             \Log::error('❌ Device not found for profile_id: '.$profile_id);
