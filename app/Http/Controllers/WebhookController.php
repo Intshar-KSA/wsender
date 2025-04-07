@@ -37,6 +37,8 @@ class WebhookController extends Controller
             }
 
             $userInfo = $this->getUserByUserProfile($profile_id);
+            \Log::info('User Info: ', $userInfo);
+            
             if ($userInfo !== null) {
                 $user_name = $userInfo['name'];
                 $token = $userInfo['token'];
