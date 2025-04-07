@@ -41,16 +41,19 @@ class WebhookController extends Controller
                 $user_name = $userInfo['name'];
                 $token = $userInfo['token'];
                 $sheet_url = $userInfo['sheet_url'];
-                $sheet_id = $this->getSheetIdFromUrl($sheet_url);
+                try {
+                    $sheet_id = $this->getSheetIdFromUrl($sheet_url);
 
-                if (! $is_me) {
-                    $this->get_sheet_msgs($sheet_id, $user_name, $profile_id, $token, $sheet_url, $message, $chat_id);
+                    if (! $is_me) {
+                        $this->get_sheet_msgs($sheet_id, $user_name, $profile_id, $token, $sheet_url, $message, $chat_id);
+                    }
+
+                    if ($is_me && $from_user == $to_user) {
+                        $this->get_sheet_msgs($sheet_id, $user_name, $profile_id, $token, $sheet_url, $message, $chat_id);
+                    }
+                } catch (Exception $e) {
+                    \Log::error('Error in get_sheet_msgs: '.$e->getMessage());
                 }
-
-                if ($is_me && $from_user == $to_user) {
-                    $this->get_sheet_msgs($sheet_id, $user_name, $profile_id, $token, $sheet_url, $message, $chat_id);
-                }
-
                 // استدعاء الرابط الموجود في المتغير webhook_url
                 if (! empty($userInfo['webhook_url'])) {
                     $this->callWebhookUrl($userInfo['webhook_url'], $event);
