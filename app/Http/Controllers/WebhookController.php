@@ -94,6 +94,18 @@ class WebhookController extends Controller
     {
         $device = Device::where('profile_id', $profile_id)->with('user')->first();
 
+        if (! $device) {
+            \Log::error('❌ Device not found for profile_id: '.$profile_id);
+        } else {
+            \Log::info('✅ Device found: ', $device->toArray());
+
+            if (! $device->user) {
+                \Log::error('❌ User not linked to device with profile_id: '.$profile_id);
+            } else {
+                \Log::info('✅ Linked User: ', $device->user->toArray());
+            }
+        }
+
         if ($device && $device->user) {
             $user = $device->user;
 
@@ -103,12 +115,6 @@ class WebhookController extends Controller
                 'sheet_url' => $device->sheet_url,
                 'webhook_url' => $device->webhook_url,
             ];
-        }
-
-        if (! $device) {
-            \Log::error('Device not found for profile_id: '.$profile_id);
-        } else {
-            \Log::error('User not found for device with profile_id: '.$profile_id);
         }
 
         return null;
