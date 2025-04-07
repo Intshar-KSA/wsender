@@ -22,40 +22,50 @@ class WebhookController extends Controller
     {
         $data = $request->getContent();
         $event = json_decode($data, true);
-        \Log::info('Webhook event: ', $event);
 
-        if (isset($event)) {
-            $chat_id = $event['messages'][0]['chatId'];
-            $message = $event['messages'][0]['body'];
-            $profile_id = $event['messages'][0]['profile_id'];
-            $is_me = $event['messages'][0]['is_me'];
-            $from_user = $event['messages'][0]['from'];
-            $to_user = $event['messages'][0]['to'];
+        \Log::info('Webhook event: ', (array) $event);
 
-            if ($message == 'chat_id') {
-                $result = $this->externalApiService->sendMessage($profile_id, $chat_id, $chat_id);
+        if (! isset($event['messages'])) {
+            \Log::warning('Missing messages key in webhook event');
+
+            return;
+        }
+
+        $messages = $event['messages'];
+
+        // إذا كانت الرسالة عبارة عن مصفوفة (incoming_message)
+        if (isset($messages[0])) {
+            $messageData = $messages[0];
+
+            $chat_id = $messageData['chatId'] ?? null;
+            $message = $messageData['body'] ?? '';
+            $profile_id = $messageData['profile_id'] ?? null;
+            $is_me = $messageData['is_me'] ?? false;
+            $from_user = $messageData['from'] ?? null;
+            $to_user = $messageData['to'] ?? null;
+
+            if ($message === 'chat_id') {
+                $this->externalApiService->sendMessage($profile_id, $chat_id, $chat_id);
             }
 
             $userInfo = $this->getUserByUserProfile($profile_id);
+            \Log::info('User Info: ', (array) $userInfo);
 
             if ($userInfo !== null) {
-                \Log::info('User Info: ', $userInfo);
                 $user_name = $userInfo['name'];
                 $token = $userInfo['token'];
                 $sheet_url = $userInfo['sheet_url'];
+
                 try {
                     $sheet_id = $this->getSheetIdFromUrl($sheet_url);
 
-                    if (! $is_me) {
-                        $this->get_sheet_msgs($sheet_id, $user_name, $profile_id, $token, $sheet_url, $message, $chat_id);
-                    }
-
-                    if ($is_me && $from_user == $to_user) {
+                    if (! $is_me || ($is_me && $from_user == $to_user)) {
                         $this->get_sheet_msgs($sheet_id, $user_name, $profile_id, $token, $sheet_url, $message, $chat_id);
                     }
                 } catch (Exception $e) {
                     \Log::error('Error in get_sheet_msgs: '.$e->getMessage());
                 }
+
                 // استدعاء الرابط الموجود في المتغير webhook_url
                 if (! empty($userInfo['webhook_url'])) {
                     $this->callWebhookUrl($userInfo['webhook_url'], $event);
@@ -63,6 +73,20 @@ class WebhookController extends Controller
             } else {
                 echo 'User not found.';
             }
+
+            // إذا كانت الرسالة عبارة عن كائن (مثل delivery_status)
+        } elseif (is_array($messages) && isset($messages['wh_type'])) {
+            $wh_type = $messages['wh_type'];
+
+            if ($wh_type === 'delivery_status') {
+                \Log::info('Delivery status received: ', $messages);
+                // يمكنك هنا حفظ حالة الرسالة في قاعدة البيانات مثلاً
+            } else {
+                \Log::warning("Unhandled webhook type: $wh_type", $messages);
+            }
+
+        } else {
+            \Log::warning('Unknown format in messages', ['messages' => $messages]);
         }
     }
 
