@@ -69,7 +69,8 @@ class WebhookController extends Controller
     private function getUserByUserProfile($profile_id)
     {
         $device = Device::where('profile_id', $profile_id)->with('user')->first();
-        if ($device) {
+
+        if ($device && $device->user) {
             $user = $device->user;
 
             return [
@@ -77,10 +78,14 @@ class WebhookController extends Controller
                 'token' => $device->token,
                 'sheet_url' => $device->sheet_url,
                 'webhook_url' => $device->webhook_url,
-                // Add other necessary fields from the device or user
             ];
         }
-        \Log::error('Device not found for profile_id: '.$profile_id);
+
+        if (! $device) {
+            \Log::error('Device not found for profile_id: '.$profile_id);
+        } else {
+            \Log::error('User not found for device with profile_id: '.$profile_id);
+        }
 
         return null;
     }
