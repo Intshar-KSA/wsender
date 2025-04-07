@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Exception;
-use DB;
-use App\Services\ExternalApiService;
-use App\Models\Device;
 use App\Models\ChatBot;
+use App\Models\Device;
+use App\Services\ExternalApiService;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class WebhookController extends Controller
@@ -23,6 +22,7 @@ class WebhookController extends Controller
     {
         $data = $request->getContent();
         $event = json_decode($data, true);
+        \Log::info('Webhook event: ', $event);
 
         if (isset($event)) {
             $chat_id = $event['messages'][0]['chatId'];
@@ -32,7 +32,7 @@ class WebhookController extends Controller
             $from_user = $event['messages'][0]['from'];
             $to_user = $event['messages'][0]['to'];
 
-            if ($message == "chat_id") {
+            if ($message == 'chat_id') {
                 $result = $this->externalApiService->sendMessage($profile_id, $chat_id, $chat_id);
             }
 
@@ -43,7 +43,7 @@ class WebhookController extends Controller
                 $sheet_url = $userInfo['sheet_url'];
                 $sheet_id = $this->getSheetIdFromUrl($sheet_url);
 
-                if (!$is_me) {
+                if (! $is_me) {
                     $this->get_sheet_msgs($sheet_id, $user_name, $profile_id, $token, $sheet_url, $message, $chat_id);
                 }
 
@@ -52,11 +52,11 @@ class WebhookController extends Controller
                 }
 
                 // استدعاء الرابط الموجود في المتغير webhook_url
-                if (!empty($userInfo['webhook_url'])) {
+                if (! empty($userInfo['webhook_url'])) {
                     $this->callWebhookUrl($userInfo['webhook_url'], $event);
                 }
             } else {
-                echo "User not found.";
+                echo 'User not found.';
             }
         }
     }
@@ -66,6 +66,7 @@ class WebhookController extends Controller
         $device = Device::where('profile_id', $profile_id)->with('user')->first();
         if ($device) {
             $user = $device->user;
+
             return [
                 'name' => $user->name,
                 'token' => $device->token,
@@ -74,6 +75,7 @@ class WebhookController extends Controller
                 // Add other necessary fields from the device or user
             ];
         }
+
         return null;
     }
 
@@ -82,6 +84,7 @@ class WebhookController extends Controller
         $parts = parse_url($url);
         $path = explode('/', $parts['path']);
         $id = $path[3];
+
         return $id;
     }
 
@@ -93,21 +96,21 @@ class WebhookController extends Controller
             if ($chatBot) {
                 $responseMessage = $chatBot->content->des;
 
-                if (strpos($chat_id, "@c.us") !== false) {
+                if (strpos($chat_id, '@c.us') !== false) {
                     try {
                         $result = $this->externalApiService->sendMessage($profile_id, $chat_id, $responseMessage);
                     } catch (Exception $e) {
-                        $result = $this->externalApiService->sendMessage($profile_id, $chat_id, $e->getMessage() . "eception");
+                        $result = $this->externalApiService->sendMessage($profile_id, $chat_id, $e->getMessage().'eception');
                     }
                 }
 
-                echo $responseMessage . "<br>";
+                echo $responseMessage.'<br>';
             } else {
-                echo "No matching message found.";
+                echo 'No matching message found.';
             }
         } catch (Exception $e) {
             // Handle exceptions
-            //echo 'Error: ' . $e->getMessage();
+            // echo 'Error: ' . $e->getMessage();
         }
     }
 
@@ -116,14 +119,13 @@ class WebhookController extends Controller
         try {
             $response = Http::post($webhookUrl, $event);
             if ($response->successful()) {
-                echo "Webhook called successfully.";
+                echo 'Webhook called successfully.';
             } else {
-                throw new Exception('Failed to call webhook. Response: ' . $response->body());
+                throw new Exception('Failed to call webhook. Response: '.$response->body());
             }
         } catch (Exception $e) {
             // Handle exceptions
-            //echo 'Error: ' . $e->getMessage();
+            // echo 'Error: ' . $e->getMessage();
         }
     }
 }
-?>
