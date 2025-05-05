@@ -137,5 +137,10 @@
         "helperText.image": "اختياري: قم بإرفاق صورة مع رسالتك.",
         "helperText.timeout_from": "الحد الأدنى للفاصل الزمني لإرسال الرسائل.",
         "helperText.timeout_to": "الحد الأقصى للفاصل الزمني لإرسال الرسائل.",
-        "helperText.file_name": "اسم الملف المرفوع (الافتراضي: картинка)."
+        "helperText.file_name": "اسم الملف المرفوع (الافتراضي: картинка).",
+        "Delete this campaign": "احذف هذه الحملة",
+        "❗ You must pause or stop the campaign before deleting.": "❗ يجب إيقاف أو إيقاف مؤقت للحملة قبل الحذف.",
+        "Cannot delete an active campaign": "لا يمكن حذف حملة نشطة",
+        "Please pause or stop the campaign first.": "يرجى إيقاف الحملة أو إيقافها مؤقتًا أولاً.",
+        "Campaign deleted successfully.": "تم حذف الحملة بنجاح."
 }

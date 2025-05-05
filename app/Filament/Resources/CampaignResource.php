@@ -201,11 +201,42 @@ class CampaignResource extends Resource
                         'started' => 'Campaign paused successfully.',
                         'paused' => 'Campaign resumed successfully.',
                     }),
+                Action::make('delete')
+                    ->icon(fn ($record) => in_array($record->status, ['started', 'resumed'])
+                        ? 'heroicon-o-information-circle'
+                        : 'heroicon-o-trash')
+                    ->color('danger')
+                    ->label('Delete')
+                    ->requiresConfirmation()
+                    ->extraAttributes(fn ($record) => [
+                        'title' => in_array($record->status, ['started', 'resumed'])
+                            ? __('❗ You must pause or stop the campaign before deleting.')
+                            : __('Delete this campaign'),
+                    ])
+                    ->action(function ($record) {
+                        if (in_array($record->status, ['started', 'resumed'])) {
+                            \Filament\Notifications\Notification::make()
+                                ->title(__('Cannot delete an active campaign'))
+                                ->body(__('Please pause or stop the campaign first.'))
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        $record->delete();
+
+                        \Filament\Notifications\Notification::make()
+                            ->title(__('Campaign deleted successfully.'))
+                            ->success()
+                            ->send();
+                    }),
+
                 // Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    // Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

@@ -147,12 +147,40 @@ class QuickSendResource extends Resource
 
             Action::make('delete')
                 ->icon('heroicon-o-trash')
-                ->action(fn ($record) => $record->delete())
-                ->color('danger')
                 ->requiresConfirmation()
-                ->successNotificationTitle('Campaign deleted successfully.'),
+                ->color('danger')
+            // ✅ لا تستخدم disabled — بل استخدم الشرط داخل الـ action نفسه
+                ->action(function ($record) {
+                    if (in_array($record->status, ['started', 'resumed'])) {
+                        \Filament\Notifications\Notification::make()
+                            ->title(__('Cannot delete an active campaign'))
+                            ->body(__('Please pause or stop the campaign first.'))
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    $record->delete();
+
+                    \Filament\Notifications\Notification::make()
+                        ->title(__('Campaign deleted successfully.'))
+                        ->success()
+                        ->send();
+                })
+            // ✅ نعرض توضيح دائم عند تمرير المؤشر
+                ->extraAttributes(fn ($record) => [
+                    'title' => in_array($record->status, ['started', 'resumed'])
+                        ? __('❗ You must pause or stop the campaign before deleting.')
+                        : __('Delete this campaign'),
+                ])
+            // ✅ نُغير لون النص أو الأيقونة حسب الحالة (اختياري)
+                ->icon(fn ($record) => in_array($record->status, ['started', 'resumed'])
+                    ? 'heroicon-o-information-circle'
+                    : 'heroicon-o-trash'),
+
         ])->bulkActions([
-            Tables\Actions\DeleteBulkAction::make(),
+            // Tables\Actions\DeleteBulkAction::make(),
         ]);
     }
 
