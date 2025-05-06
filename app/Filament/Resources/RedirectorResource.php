@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use Filament\Resources\Resource;
-use Illuminate\Support\Facades\Redirect;
 
 class RedirectorResource extends Resource
 {
@@ -20,7 +19,7 @@ class RedirectorResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => fn () => Redirect::to('https://documenter.getpostman.com/view/17450141/2sAYdhKqnx'),
+            'index' => \App\Filament\Resources\ApiDocsResource\Pages\RedirectToApiDocs::route('/'),
         ];
     }
 
