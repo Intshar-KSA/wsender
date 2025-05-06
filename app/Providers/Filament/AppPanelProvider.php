@@ -58,7 +58,7 @@ class AppPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
-                // FilamentShieldPlugin::make(),
+                FilamentShieldPlugin::make(),
                 // ->authorize(fn (): bool => auth()->user()->role === 'admin'),
             ])
             ->authMiddleware([

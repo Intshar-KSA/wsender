@@ -3,17 +3,25 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
-// implements MustVerifyEmail
+    // implements MustVerifyEmail
 {
-    use HasFactory, Notifiable,HasRoles;
+    use HasFactory, HasRoles,Notifiable;
+
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            if (! $user->hasRole('user')) {
+                $user->assignRole('user');
+            }
+        });
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -24,7 +32,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        // 'role',
     ];
 
     /**
@@ -50,9 +58,6 @@ class User extends Authenticatable
         ];
     }
 
-
-
-
     public function devices()
     {
         return $this->hasMany(Device::class);
@@ -64,21 +69,20 @@ class User extends Authenticatable
         return $this->hasMany(Content::class);
     }
 
+    //     public function activateFreePlan(): void
+    // {
+    //     $freePlan = Plan::where('is_free', true)->first();
 
-//     public function activateFreePlan(): void
-// {
-//     $freePlan = Plan::where('is_free', true)->first();
-
-//     if ($freePlan) {
-//         $this->subscriptions()->create([
-//             'device_id' => null, // يمكن تغييره حسب احتياجاتك
-//             'plan_id' => $freePlan->id,
-//             'start_date' => now(),
-//         ]);
-//     }
-// }
-public function subscriptions()
-{
-    return $this->hasMany(Subscription::class);
-}
+    //     if ($freePlan) {
+    //         $this->subscriptions()->create([
+    //             'device_id' => null, // يمكن تغييره حسب احتياجاتك
+    //             'plan_id' => $freePlan->id,
+    //             'start_date' => now(),
+    //         ]);
+    //     }
+    // }
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
 }

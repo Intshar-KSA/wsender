@@ -21,11 +21,11 @@ class AdminSubscriptionResource extends Resource
 
     protected static ?string $label = 'Subscriptions request';
 
-    public static function canAccess(): bool
-    {
-        // تحقق من دور المستخدم
-        return auth()->user()->role === 'admin'; // يعرض المورد فقط إذا كان الدور Admin
-    }
+    // public static function canAccess(): bool
+    // {
+    //     // تحقق من دور المستخدم
+    //     return auth()->user()->role === 'admin'; // يعرض المورد فقط إذا كان الدور Admin
+    // }
 
     public static function form(Forms\Form $form): Forms\Form
     {
