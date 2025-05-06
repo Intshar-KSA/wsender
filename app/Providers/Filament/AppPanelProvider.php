@@ -59,6 +59,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
+                
                 // ->authorize(fn (): bool => auth()->user()->role === 'admin'),
             ])
             ->authMiddleware([

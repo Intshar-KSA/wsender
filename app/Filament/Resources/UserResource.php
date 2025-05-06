@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\helper\ModelLabelHelper;
 use App\Models\User;
 use Filament\Forms;
@@ -11,8 +10,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserResource extends Resource
 {
@@ -36,10 +33,18 @@ class UserResource extends Resource
                 Forms\Components\DateTimePicker::make('email_verified_at'),
                 Forms\Components\TextInput::make('password')
                     ->password()
+                    ->maxLength(255)
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->required(fn (string $context) => $context === 'create')
+                    ->autocomplete('new-password'),
+                Forms\Components\Select::make('roles')
+                    ->label('الدور')
+                    ->multiple()
+                    // ->multiple(false)
+                    ->relationship('roles', 'name') // استخدم relationship إذا كانت العلاقة معرفة في موديل User
+                    ->preload()
                     ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('role')
-                    ->required(),
+                    ->searchable(),
             ]);
     }
 
@@ -54,7 +59,10 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('role'),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('الدور')
+                    ->sortable()
+                    ->limit(1),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
