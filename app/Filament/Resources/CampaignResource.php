@@ -65,6 +65,7 @@ class CampaignResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('mass_prsting_id')
                     ->numeric()
+                    ->copyable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('content.title')
                     ->sortable(),
@@ -201,6 +202,14 @@ class CampaignResource extends Resource
                         'started' => 'Campaign paused successfully.',
                         'paused' => 'Campaign resumed successfully.',
                     }),
+
+                Action::make('عرض النتائج')
+                    ->label('عرض النتائج')
+                    ->icon('heroicon-o-chart-bar')
+                    ->url(fn ($record) => CampaignResource::getUrl('results', ['record' => $record]))
+                    // ->visible(fn () => auth()->user()?->can('view campaign results'))
+                    ->openUrlInNewTab(),
+
                 Action::make('delete')
                     ->icon(fn ($record) => in_array($record->status, ['started', 'resumed'])
                         ? 'heroicon-o-information-circle'
@@ -252,6 +261,9 @@ class CampaignResource extends Resource
             'index' => Pages\ListCampaigns::route('/'),
             'create' => Pages\CreateCampaign::route('/create'),
             'edit' => Pages\EditCampaign::route('/{record}/edit'),
+            // 'view' => Pages\CampaignResults::route('/{record}/results'),
+            'results' => Pages\CampaignResults::route('/{record}/results'),
+
         ];
     }
 

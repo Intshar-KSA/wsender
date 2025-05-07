@@ -2,23 +2,15 @@
 
 namespace App\Services;
 
-use App\Models\Device;
-use App\Models\Content;
 use App\Models\Campaign;
-use App\Models\QuickSend;
 use App\Models\ContactCat;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Filament\Notifications\Notification;
 use Illuminate\Validation\ValidationException;
 
 class CampaignService
 {
-
-
-
-
-
     public static function pauseCampaign(Campaign $campaign)
     {
         // dd($campaign->mass_prsting_id);
@@ -50,10 +42,6 @@ class CampaignService
 
         return $response->json();
     }
-
-
-
-
 
     public static function resumeCampaign(Campaign $campaign)
     {
@@ -87,8 +75,38 @@ class CampaignService
         return $response->json();
     }
 
+    public static function getCampaignResults(Campaign $campaign, int $offset = 0, int $limit = 100): array
+    {
+        $massPostingId = $campaign->mass_prsting_id;
+        $profileId = $campaign->device->profile_id;
 
+        if (! $massPostingId || ! $profileId) {
+            return [];
+        }
 
+        $headers = [
+            'accept' => 'application/json',
+            'Authorization' => '40703bb7812b727ec01c24f2da518c407342559c',
+        ];
+
+        $response = Http::withHeaders($headers)->get('https://wappi.pro/mailings/messages', [
+            'profile_id' => $profileId,
+            'mass_posting_id' => $massPostingId,
+            'offset' => $offset,
+            'limit' => $limit,
+        ]);
+
+        if (! $response->successful()) {
+            \Log::error('Failed to fetch campaign results:', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return [];
+        }
+
+        return $response->json('detail') ?? [];
+    }
 
     public static function createCampaignFromCampaignsTable(Campaign $campaign): void
     {
@@ -119,11 +137,11 @@ class CampaignService
                 'accept' => 'application/json',
                 'Authorization' => '40703bb7812b727ec01c24f2da518c407342559c',
             ];
-// dd(implode(PHP_EOL, $contacts));
+            // dd(implode(PHP_EOL, $contacts));
             // إرسال الطلب إلى API
-            $response = Http::asMultipart()->withHeaders($headers)->post('https://wappi.pro/mailings/init?profile_id=' . $device->profile_id, [
+            $response = Http::asMultipart()->withHeaders($headers)->post('https://wappi.pro/mailings/init?profile_id='.$device->profile_id, [
                 'mass_text' => $content->des, // الرسالة النصية
-                'mass_phones' =>implode(PHP_EOL, $contacts), // أرقام الهواتف
+                'mass_phones' => implode(PHP_EOL, $contacts), // أرقام الهواتف
                 'mass_image' => '',
                 'mass_timeout_from' => $campaign->message_every - 5,
                 'mass_timeout_to' => $campaign->message_every + 5,
@@ -145,7 +163,7 @@ class CampaignService
                 throw new \Exception($responseBody['detail'] ?? 'Failed to create campaign.');
             }
         } catch (\Exception $e) {
-            \Log::error('Error creating campaign: ' . $e->getMessage());
+            \Log::error('Error creating campaign: '.$e->getMessage());
             Notification::make()
                 ->title('Error creating campaign')
                 ->danger()
@@ -156,6 +174,4 @@ class CampaignService
             ]);
         }
     }
-
-
 }
