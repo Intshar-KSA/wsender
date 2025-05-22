@@ -20,4 +20,6 @@ class ListQuickSends extends ListRecords
     {
         return parent::getTableQuery()->latest();
     }
+
+    
 }

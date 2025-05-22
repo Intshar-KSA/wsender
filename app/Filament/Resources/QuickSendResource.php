@@ -18,6 +18,7 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class QuickSendResource extends Resource
 {
@@ -31,8 +32,8 @@ class QuickSendResource extends Resource
     {
         return $form->schema([
             Select::make('profile_id')
-                ->label(__('Select Device'))
-                ->options(Device::all()->pluck('nickname', 'profile_id'))
+                ->options(fn () => Device::where('user_id', auth()->id())
+                    ->pluck('nickname', 'profile_id'))
                 ->searchable()
                 ->preload()
                 ->required()
@@ -77,45 +78,51 @@ class QuickSendResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('profile_id')
-                ->sortable()
-                ->searchable(),
+        return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                return $query->whereHas('device', function (Builder $q) {
+                    $q->where('user_id', auth()->id());
+                });
+            })
+            ->columns([
+                TextColumn::make('profile_id')
+                    ->sortable()
+                    ->searchable(),
 
-            TextColumn::make('message_text')
-                ->limit(30),
+                TextColumn::make('message_text')
+                    ->limit(30),
 
-            TextColumn::make('phone_numbers')
-                ->limit(30)
-                ->copyable(),
-            TextColumn::make('image')
-                ->label(__('Image'))
-                ->formatStateUsing(function ($state) {
-                    return $state
-                        ? asset('storage/'.$state)
-                        : null;
-                })
-                ->url(fn ($record) => $record->image ? asset('storage/'.$record->image) : null, true)
-                ->openUrlInNewTab()
-                ->visible(fn ($record) => ! empty($record->image)),
+                TextColumn::make('phone_numbers')
+                    ->limit(30)
+                    ->copyable(),
+                TextColumn::make('image')
+                    ->label(__('Image'))
+                    ->formatStateUsing(function ($state) {
+                        return $state
+                            ? asset('storage/'.$state)
+                            : null;
+                    })
+                    ->url(fn ($record) => $record->image ? asset('storage/'.$record->image) : null, true)
+                    ->openUrlInNewTab()
+                    ->visible(fn ($record) => ! empty($record->image)),
 
-            BadgeColumn::make('status')
-                ->colors([
-                    'success' => 'started',
-                    'warning' => 'paused',
-                    'danger' => 'failed',
-                    'gray' => 'created',
-                ])
-                ->sortable(),
+                BadgeColumn::make('status')
+                    ->colors([
+                        'success' => 'started',
+                        'warning' => 'paused',
+                        'danger' => 'failed',
+                        'gray' => 'created',
+                    ])
+                    ->sortable(),
 
-            TextColumn::make('created_at')
-                ->dateTime()
-                ->sortable(),
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable(),
 
-            TextColumn::make('updated_at')
-                ->dateTime()
-                ->sortable(),
-        ])->actions([
+                TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable(),
+            ])->actions([
             Action::make('toggle_status')
                 ->icon(fn ($record) => match ($record->status) {
                     'created' => 'heroicon-o-play',
