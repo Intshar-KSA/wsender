@@ -172,11 +172,11 @@ class StatusResource extends Resource
         ];
     }
 
-    protected function getTableQuery(): Builder
+    public static function getEloquentQuery(): Builder
     {
-        return parent::getTableQuery()
-            ->whereHas('devices', function (Builder $query) {
-                $query->where('user_id', auth()->id());
+        return parent::getEloquentQuery()
+            ->whereHas('devices', function (Builder $q) {
+                $q->where('user_id', auth()->id());
             });
     }
 
