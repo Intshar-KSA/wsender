@@ -14,9 +14,11 @@ class ChatBot extends Model
         'content_id',
         'type',
         'status',
+        'is_greeting',
     ];
     protected $casts = [
         'status' => 'boolean',
+         'is_greeting' => 'boolean',
     ];
 
 
@@ -24,7 +26,7 @@ class ChatBot extends Model
     // Relationship with Device
     public function device()
     {
-    
+
         return $this->belongsTo(Device::class);
     }
 

@@ -47,6 +47,11 @@ class ChatBotResource extends Resource
                         'contains' => 'Contains',
                     ])
                     ->required(),
+                Forms\Components\Toggle::make('is_greeting')
+                    ->label('رسالة ترحيبية؟')
+                    ->helperText('فعّل هذا إذا كانت هذه الرسالة ترحيبية للجهاز')
+                    ->onColor('success')
+                    ->offColor('secondary'),
 
                 Forms\Components\Toggle::make('status')
                     ->required()
@@ -71,6 +76,15 @@ class ChatBotResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('type')
                     ->sortable(),
+
+                Tables\Columns\ToggleColumn::make('is_greeting')
+                    ->label('ترحيبية؟')
+                    // ->onIcon('heroicon-o-badge-check')
+                    // ->offIcon('heroicon-o-badge-x')
+                    ->onColor('success')
+                    ->offColor('gray')
+                    ->sortable()
+                    ->toggleable(),
 
                 Tables\Columns\ToggleColumn::make('status')
                     ->onColor('success')
