@@ -8,6 +8,7 @@ use App\Models\Status;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Illuminate\Database\Eloquent\Builder;
 
 class StatusResource extends Resource
 {
@@ -169,6 +170,14 @@ class StatusResource extends Resource
             'create' => Pages\CreateStatus::route('/create'),
             'edit' => Pages\EditStatus::route('/{record}/edit'),
         ];
+    }
+
+    protected function getTableQuery(): Builder
+    {
+        return parent::getTableQuery()
+            ->whereHas('devices', function (Builder $query) {
+                $query->where('user_id', auth()->id());
+            });
     }
 
     public static function getModelLabel(): string
