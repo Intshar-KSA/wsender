@@ -63,6 +63,9 @@ class ChatBotResource extends Resource
                 Tables\Columns\TextColumn::make('user_device.nickname')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('msg')
+                    // ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('content.title')
                     ->sortable()
                     ->searchable(),
@@ -149,6 +152,7 @@ class ChatBotResource extends Resource
                 $query->where('user_id', auth()->id());
             });
     }
+
     public static function getModelLabel(): string
     {
         return ModelLabelHelper::getModelLabel(static::$model);

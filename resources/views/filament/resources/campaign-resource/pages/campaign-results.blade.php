@@ -22,12 +22,6 @@
                         <tr>
                             <td class="px-4 py-2">{{ $item['recipient'] ?? '-' }}</td>
                             <td class="px-4 py-2 text-red-600 font-bold">{{ $item['delivered'] ?? 'لا شيء' }}</td>
-
-
-
-
-
-
                             <td class="px-4 py-2">{{ $item['caption'] ?? '-' }}</td>
                             <td class="px-4 py-2 text-gray-600">{{ $item['message'] ?? '-' }}</td>
                             <td class="px-4 py-2">{{ \Carbon\Carbon::parse($item['created_at'] ?? now())->format('Y-m-d H:i') }}</td>
