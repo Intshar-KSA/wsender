@@ -27,6 +27,11 @@ class AdminSubscriptionResource extends Resource
     //     return auth()->user()->role === 'admin'; // يعرض المورد فقط إذا كان الدور Admin
     // }
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasRole('super_admin');
+    }
+
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form
