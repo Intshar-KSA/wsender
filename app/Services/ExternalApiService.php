@@ -66,18 +66,43 @@ class ExternalApiService
         throw new \Exception('Failed to delete profile via API. Response: '.$response->body());
     }
 
-    public function getQrCode(string $profileId)
-    {
-        $url = $this->baseUrl.'/sync/qr/get?profile_id='.urlencode($profileId);
+    // public function getQrCode(string $profileId)
+    // {
+    //     $url = $this->baseUrl.'/sync/qr/get?profile_id='.urlencode($profileId);
 
-        $response = Http::withHeaders($this->headers)->get($url);
+    //     $response = Http::withHeaders($this->headers)->get($url);
 
-        if ($response->successful()) {
-            return $response->json();
-        }
+    //     if ($response->successful()) {
+    //         return $response->json();
+    //     }
 
-        throw new \Exception('Failed to get QR code via API. Response: '.$response->body());
+    //     throw new \Exception('Failed to get QR code via API. Response: '.$response->body());
+    // }
+
+    // app/Services/ExternalApiService.php
+public function getQrCode(string $profileId): array
+{
+    $url = $this->baseUrl.'/sync/qr/get?profile_id='.urlencode($profileId);
+
+    $response = Http::withHeaders($this->headers)->get($url);
+
+    // 1) استجابة ناجحة تمامًا
+    if ($response->successful()) {
+        return $response->json();
     }
+
+    // 2) حالة "already authorized" نُرجع JSON ليعالجه الـ Controller
+    $json = $response->json();
+    if (($json['detail'] ?? '') === 'You are already authorized') {
+        return $json;                       // لا استثناء
+    }
+
+    // 3) أي خطأ آخر: أبقِ الاستثناء كما هو
+    throw new \Exception(
+        'Failed to get QR code via API. Response: '.$response->body()
+    );
+}
+
 
     public function sendMessage(string $profileId, string $recipient, string $body)
     {

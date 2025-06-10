@@ -8,6 +8,19 @@
     </div>
     <div class="flex justify-center items-center mt-4">
         <x-filament::button wire:click="closeQrCode">Close</x-filament::button>
+        <x-filament::button
+    x-data
+    x-on:click="
+        await navigator.clipboard.writeText('{{ route('public.qr', $qrCodeUrl2) }}');
+        $dispatch('notify', { type: 'success', title: 'تم نسخ الرابط!' });
+    "
+    icon="heroicon-o-clipboard"
+    color="primary"
+>
+    نسخ رابط الربط
+</x-filament::button>
+
+
     </div>
 
     <script>

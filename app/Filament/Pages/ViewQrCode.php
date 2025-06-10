@@ -36,6 +36,14 @@ class ViewQrCode extends Page
         $this->loadQrCode($this->qrCodeUrl2);
     }
 
+
+    public function getShareableLink(): string
+{
+    // بلا توقيع أو انتهاء
+    return route('public.qr', ['profile' => $this->qrCodeUrl2]);
+}
+
+
     private function loadQrCode(string $qrCodeText)
     {
         $apiService = app(ExternalApiService::class);
