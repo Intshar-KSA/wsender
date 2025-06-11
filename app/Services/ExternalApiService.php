@@ -86,8 +86,8 @@ public function getQrCode(string $profileId): array
     $url = $this->baseUrl . '/sync/qr/get?profile_id=' . urlencode($profileId);
 
     $response = Http::withHeaders($this->headers)
-                    ->timeout(10)              // زمن انتظار اختياري
-                    ->retry(1, 250)            // إعادة محاولة وحيدة
+                    // ->timeout(60)              // زمن انتظار اختياري
+                    // ->retry(1, 250)            // إعادة محاولة وحيدة
                     ->get($url);
 
     /* ─────────────────────────
