@@ -16,16 +16,23 @@ class PublicQrController extends Controller
         $response = $api->getQrCode($profile);
 
         // ➊ حدد نوع الصفحة المطلوب
-      $status = 'qr';          // default
-$qrCodeUrl = null;
+      // مقتطف التمييز بين الحالات
+$status     = 'qr';       // qr | authorized | not_found | error
+$qrCodeUrl  = null;
 
-if (isset($response['qrCode']) && $response['status'] === 'done') {
+if (isset($response['qrCode']) && ($response['status'] ?? '') === 'done') {
     $qrCodeUrl = $response['qrCode'];
-} elseif (($response['detail'] ?? '') === 'You are already authorized') {
+}
+elseif (($response['detail'] ?? '') === 'You are already authorized') {
     $status = 'authorized';
-} else {
+}
+elseif (($response['detail'] ?? '') === 'Profile not found') {
+    $status = 'not_found';
+}
+else {
     $status = 'error';
 }
+
 
         return view('public.qr', [
             'device'    => $device,

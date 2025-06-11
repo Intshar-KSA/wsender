@@ -80,28 +80,79 @@ class ExternalApiService
     // }
 
     // app/Services/ExternalApiService.php
+// app/Services/ExternalApiService.php
 public function getQrCode(string $profileId): array
 {
-    $url = $this->baseUrl.'/sync/qr/get?profile_id='.urlencode($profileId);
+    $url = $this->baseUrl . '/sync/qr/get?profile_id=' . urlencode($profileId);
 
-    $response = Http::withHeaders($this->headers)->get($url);
+    $response = Http::withHeaders($this->headers)
+                    ->timeout(10)              // زمن انتظار اختياري
+                    ->retry(1, 250)            // إعادة محاولة وحيدة
+                    ->get($url);
 
-    // 1) استجابة ناجحة تمامًا
+    /* ─────────────────────────
+       1) استجابة HTTP 200 «نجاح»
+       ───────────────────────── */
     if ($response->successful()) {
-        return $response->json();
+        return $response->json();              // يتضمن qrCode + status=done
     }
 
-    // 2) حالة "already authorized" نُرجع JSON ليعالجه الـ Controller
-    $json = $response->json();
-    if (($json['detail'] ?? '') === 'You are already authorized') {
-        return $json;                       // لا استثناء
+    /* ─────────────────────────
+       2) استجابات منطقية نتوقّعها
+       409  => already authorized
+       404  => profile not found
+       422  => profile needs refresh / QR expired
+       ───────────────────────── */
+    $json = $response->json();                 // قد يُعيد null إذا ليس JSON
+    $detail = $json['detail'] ?? '';
+
+    // «جهاز مرتبط مسبقًا»
+    if ($response->status() === 409 || $detail === 'You are already authorized') {
+        return [
+            'status' => 'authorized',
+            'detail' => 'You are already authorized',
+        ];
     }
 
-    // 3) أي خطأ آخر: أبقِ الاستثناء كما هو
+    // «الملف غير موجود»
+    if ($response->status() === 404 || $detail === 'Profile not found') {
+        return [
+            'status' => 'not_found',
+            'detail' => 'Profile not found',
+        ];
+    }
+
+    // «كود منتهٍ / بحاجة تحديث»
+    if ($response->status() === 422 || str_contains($detail, 'expired')) {
+        return [
+            'status' => 'expired',
+            'detail' => $detail ?: 'QR expired',
+        ];
+    }
+
+    /* ─────────────────────────
+       3) باقي أخطاء الـ 4xx: أعِدها ليعالجها الأعلى إن رغبت
+       ───────────────────────── */
+    if ($response->status() >= 400 && $response->status() < 500) {
+        return [
+            'status'     => 'client_error',
+            'http_code'  => $response->status(),
+            'detail'     => $detail ?: $response->body(),
+        ];
+    }
+
+    /* ─────────────────────────
+       4) أخطاء حرجة (5xx) أو شبكة: أرمِ استثناء
+       ───────────────────────── */
     throw new \Exception(
-        'Failed to get QR code via API. Response: '.$response->body()
+        sprintf(
+            'QR API failure (%s): %s',
+            $response->status(),
+            $response->body()
+        )
     );
 }
+
 
 
     public function sendMessage(string $profileId, string $recipient, string $body)
