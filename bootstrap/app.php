@@ -19,12 +19,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // أضف اسم الـCommand هنا
         \App\Console\Commands\RunScheduledStatuses::class,
         \App\Console\Commands\CheckCampaignsStatus::class,
+        \App\Console\Commands\CheckSubscriptions::class,
     ])
     ->withSchedule(function (Schedule $schedule) {
         // جدولة الـCommand للعمل كل ساعة
         $schedule->command('statuses:run')->everyFiveMinutes();
 
         $schedule->command('campaigns:check-status')->hourly();
+            $schedule->command('subscriptions:check')->everyTenMinutes(); // ✅ الجديد
+
         // $schedule->command('attendance:process')->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions) {
