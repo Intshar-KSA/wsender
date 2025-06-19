@@ -6,47 +6,58 @@ use App\Models\Subscription;
 use Illuminate\Console\Command;
 use App\Services\ExternalApiService;
 
+use App\Models\Device;
+
 use App\Enums\ProfileDeleteStatus;
 
 
 class CheckSubscriptions extends Command
 {
     protected $signature = 'subscriptions:check';
-    protected $description = 'Check for expired subscriptions and delete their profiles if needed.';
+    protected $description = 'Check expired subscriptions and delete their profiles if needed.';
 
     public function handle(): void
     {
         $apiService = app(ExternalApiService::class);
 
-        $subscriptions = Subscription::with('device')->get(); // ✅ تحميل الجهاز لتفادي N+1
+        // تحميل بدون global scope
+        $subscriptions = Subscription::with(['device' => fn ($query) => $query->withoutGlobalScopes()])
+            ->get();
 
         foreach ($subscriptions as $subscription) {
+            $this->line("🔍 Checking Subscription #{$subscription->id}");
+            \Log::info("🔍 Checking Subscription #{$subscription->id}");
+
             if (! $subscription->isExpired()) {
-                $this->info("Subscription ID {$subscription->id} is still active.");
+                $this->line("⏳ Still Active — start_date: {$subscription->start_date}");
+                \Log::info("⏳ Still Active — start_date: {$subscription->start_date}");
                 continue;
             }
 
-            // تحقق من وجود جهاز
-            if (!$subscription->device) {
-                $this->warn("Subscription ID {$subscription->id} has no associated device.");
+            $device = $subscription->device;
+
+            if (! $device) {
+                $this->warn("⚠️ Subscription ID {$subscription->id} has no associated device (device_id: {$subscription->device_id})");
+                \Log::warning("⚠️ Subscription ID {$subscription->id} has no associated device (device_id: {$subscription->device_id})");
                 continue;
             }
 
-            // تحقق من وجود profile_id
-            $profileId = $subscription->device->profile_id;
+            $profileId = $device->profile_id;
+
             if (empty($profileId)) {
-                $this->warn("Device ID {$subscription->device->id} has no profile_id.");
+                $this->warn("⚠️ Device ID {$device->id} has no profile_id.");
+                \Log::warning("⚠️ Device ID {$device->id} has no profile_id.");
                 continue;
             }
 
-            // تحقق من عدم تكرار الحذف
             if (in_array($subscription->profile_delete_status, [ProfileDeleteStatus::DONE, ProfileDeleteStatus::NOT_FOUND])) {
-                $this->info("Profile ID {$profileId} already handled previously.");
+                $this->info("✅ Profile ID {$profileId} already handled previously ({$subscription->profile_delete_status})");
+                \Log::info("✅ Profile ID {$profileId} already handled previously ({$subscription->profile_delete_status})");
                 continue;
             }
 
-            // تنفيذ الحذف
             try {
+                $this->line("🚀 Attempting deletion for Profile ID {$profileId}...");
                 $result = $apiService->deleteProfile($profileId);
                 $status = $result['status'] ?? null;
 
@@ -63,14 +74,16 @@ class CheckSubscriptions extends Command
                     'profile_delete_status' => $deleteStatus,
                 ]);
 
-                $this->info("Profile ID {$profileId} deletion result: {$deleteStatus}");
+                $this->info("✅ Deletion completed for Profile ID {$profileId} (Status: {$deleteStatus})");
+                \Log::info("✅ Deletion completed for Profile ID {$profileId} (Status: {$deleteStatus})");
             } catch (\Throwable $e) {
-                \Log::error("Profile deletion error [{$profileId}]: ".$e->getMessage());
+                \Log::error("🔥 Exception for Profile {$profileId}: ".$e->getMessage());
                 $subscription->update(['profile_delete_status' => ProfileDeleteStatus::FAILED]);
-                $this->error("Failed to delete profile ID {$profileId}");
+                $this->error("❌ Failed to delete Profile ID {$profileId}");
             }
         }
 
-        $this->info('Subscription check completed.');
+        $this->info('🎯 Subscription check completed.');
+        \Log::info('🎯 Subscription check completed.');
     }
 }
