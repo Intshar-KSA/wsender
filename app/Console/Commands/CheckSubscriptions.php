@@ -12,13 +12,13 @@ use App\Enums\ProfileDeleteStatus;
 class CheckSubscriptions extends Command
 {
     protected $signature = 'subscriptions:check';
-    protected $description = 'Check for expired subscriptions and take appropriate actions.';
+    protected $description = 'Check for expired subscriptions and delete their profiles if needed.';
 
     public function handle(): void
     {
         $apiService = app(ExternalApiService::class);
 
-        $subscriptions = Subscription::all();
+        $subscriptions = Subscription::with('device')->get(); // ✅ تحميل الجهاز لتفادي N+1
 
         foreach ($subscriptions as $subscription) {
             if (! $subscription->isExpired()) {
@@ -26,19 +26,30 @@ class CheckSubscriptions extends Command
                 continue;
             }
 
-            $this->info("Subscription ID {$subscription->id} has expired.");
-
-            // لا تحاول الحذف إن كانت الحالة محفوظة مسبقًا بنجاح أو غير موجود
-            if (in_array($subscription->profile_delete_status, [ProfileDeleteStatus::DONE, ProfileDeleteStatus::NOT_FOUND])) {
-                $this->info("Profile ID {$subscription->profile_id} already deleted or not found.");
+            // تحقق من وجود جهاز
+            if (!$subscription->device) {
+                $this->warn("Subscription ID {$subscription->id} has no associated device.");
                 continue;
             }
 
+            // تحقق من وجود profile_id
+            $profileId = $subscription->device->profile_id;
+            if (empty($profileId)) {
+                $this->warn("Device ID {$subscription->device->id} has no profile_id.");
+                continue;
+            }
+
+            // تحقق من عدم تكرار الحذف
+            if (in_array($subscription->profile_delete_status, [ProfileDeleteStatus::DONE, ProfileDeleteStatus::NOT_FOUND])) {
+                $this->info("Profile ID {$profileId} already handled previously.");
+                continue;
+            }
+
+            // تنفيذ الحذف
             try {
-                $result = $apiService->deleteProfile($subscription->profile_id);
+                $result = $apiService->deleteProfile($profileId);
                 $status = $result['status'] ?? null;
 
-                // تحديد الحالة المحفوظة
                 if ($status === 'done') {
                     $deleteStatus = ProfileDeleteStatus::DONE;
                 } elseif ($result['detail'] === 'Profile not found') {
@@ -52,16 +63,11 @@ class CheckSubscriptions extends Command
                     'profile_delete_status' => $deleteStatus,
                 ]);
 
-                $this->info("Profile ID {$subscription->profile_id} deletion result: {$deleteStatus}");
-
+                $this->info("Profile ID {$profileId} deletion result: {$deleteStatus}");
             } catch (\Throwable $e) {
-                \Log::error("Profile deletion error [{$subscription->profile_id}]: {$e->getMessage()}");
-
-                // تسجيل فشل
-                $subscription->update([
-                    'profile_delete_status' => ProfileDeleteStatus::FAILED,
-                ]);
-                $this->error("Failed to delete profile ID {$subscription->profile_id}");
+                \Log::error("Profile deletion error [{$profileId}]: ".$e->getMessage());
+                $subscription->update(['profile_delete_status' => ProfileDeleteStatus::FAILED]);
+                $this->error("Failed to delete profile ID {$profileId}");
             }
         }
 
