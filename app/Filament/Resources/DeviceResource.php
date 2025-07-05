@@ -272,7 +272,8 @@ class DeviceResource extends Resource
                         $encodedUrl = urlencode($qrCodeText);
 
                         return redirect()->route('filament.pages.view-qr-code', ['qrCodeText' => $encodedUrl]);
-                    }),
+                    })
+                    ->label(__('View qr code')),
 
             ])
 

@@ -2,23 +2,24 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\QuickSendResource\Pages;
-use App\helper\ModelLabelHelper;
+use Filament\Tables;
 use App\Models\Device;
+use Filament\Forms\Form;
 use App\Models\QuickSend;
+use Filament\Tables\Table;
+use App\helper\ModelLabelHelper;
+use Filament\Resources\Resource;
 use App\Services\QuickSendService;
-use Filament\Forms\Components\FileUpload;
+use Illuminate\Support\HtmlString;
+use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\QuickSendResource\Pages;
 
 class QuickSendResource extends Resource
 {
@@ -32,6 +33,7 @@ class QuickSendResource extends Resource
     {
         return $form->schema([
             Select::make('profile_id')
+            ->label(__('Device'))
                 ->options(fn () => Device::where('user_id', auth()->id())
                     ->pluck('nickname', 'profile_id'))
                 ->searchable()
@@ -42,7 +44,17 @@ class QuickSendResource extends Resource
             Textarea::make('message_text')
                 ->required()
                 ->rows(3)
-                ->helperText(__('helperText.message_text')),
+                ->maxLength(4000)
+                 ->live()
+    ->helperText(fn ($state, Textarea $component) => new HtmlString(
+        '<div class="text-end ' .
+        (strlen($state) > $component->getMaxLength() ? 'text-danger-600' : '') .
+        '">' .
+            strlen($state) . ' / ' . $component->getMaxLength() .
+        '</div>'
+    ))
+                // ->helperText(__('helperText.message_text'))
+                ,
 
             Textarea::make('phone_numbers')
                 ->required()
@@ -58,13 +70,13 @@ class QuickSendResource extends Resource
 
             TextInput::make('timeout_from')
                 ->numeric()
-                ->default(5)
+                ->default(15)
                 ->required()
                 ->helperText(__('helperText.timeout_from')),
 
             TextInput::make('timeout_to')
                 ->numeric()
-                ->default(8)
+                ->default(30)
                 ->required()
                 ->helperText(__('helperText.timeout_to')),
 
@@ -73,8 +85,11 @@ class QuickSendResource extends Resource
                 ->hidden()
                 ->required()
                 ->helperText(__('helperText.file_name')),
-        ]);
+        ])
+        ->createAnother(false)
+        ;
     }
+
 
     public static function table(Table $table): Table
     {

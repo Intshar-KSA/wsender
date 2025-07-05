@@ -31,9 +31,11 @@ class ChatBotResource extends Resource
                     })
                     ->required(),
 
-                Forms\Components\Textarea::make('msg')
+                Forms\Components\TextInput::make('msg')
+                    ->label(__('Message Key'))
                     ->required()
-                    ->columnSpanFull(),
+                    // ->columnSpanFull()
+                    ,
 
                 Forms\Components\Select::make('content_id')
                     ->relationship('content', 'title', function (Builder $query) {
