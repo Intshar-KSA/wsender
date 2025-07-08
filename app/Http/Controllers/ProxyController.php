@@ -13,14 +13,12 @@ class ProxyController extends Controller
         $profileId = $request->query('profile_id') ?? $request->input('profile_id');
 
         $excludedProfiles = ['fe2dbcb1-c531', '2fdc9526-cccd'];
-        \Log::info('Profile ID:-> ' . $profileId);
+        \Log::info('Profile ID:-> '.$profileId);
         // إذا لم يكن البروفايل هو المستثنى، تحقق من الاشتراك
         if ($profileId && ! in_array($profileId, $excludedProfiles)) {
-           $device = Device::withoutGlobalScope('current_user_devices')
-    ->where('profile_id', $profileId)
-    ->first();
-
-
+            $device = Device::withoutGlobalScope('current_user_devices')
+                ->where('profile_id', $profileId)
+                ->first();
 
             if (! $device) {
                 return response()->json(['error' => 'Device not found.'], 404);
@@ -46,8 +44,10 @@ class ProxyController extends Controller
 
         $method = $request->method();
 
-        $headers = $request->headers->all();
-        $headers['Authorization'] = '40703bb7812b727ec01c24f2da518c407342559c';
+        $headers = array_merge(
+    array_map(fn($h) => is_array($h) ? implode(',', $h) : $h, $request->headers->all()),
+    ['Authorization' => '40703bb7812b727ec01c24f2da518c407342559c']
+);
 
         $http = Http::withHeaders($headers);
 
