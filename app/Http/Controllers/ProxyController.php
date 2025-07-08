@@ -16,7 +16,8 @@ class ProxyController extends Controller
         \Log::info('Profile ID: ' . $profileId);
         // إذا لم يكن البروفايل هو المستثنى، تحقق من الاشتراك
         if ($profileId && ! in_array($profileId, $excludedProfiles)) {
-            $device = Device::where('profile_id', $profileId)->first();
+           $device = Device::whereRaw('BINARY profile_id = ?', [$profileId])->first();
+
 
             if (! $device) {
                 return response()->json(['error' => 'Device not found.'], 404);
