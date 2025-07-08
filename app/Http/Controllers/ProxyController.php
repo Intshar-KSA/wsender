@@ -16,7 +16,10 @@ class ProxyController extends Controller
         \Log::info('Profile ID:-> ' . $profileId);
         // إذا لم يكن البروفايل هو المستثنى، تحقق من الاشتراك
         if ($profileId && ! in_array($profileId, $excludedProfiles)) {
-           $device = Device::whereRaw('BINARY profile_id = ?', [$profileId])->first();
+           $device = Device::withoutGlobalScope('current_user_devices')
+    ->where('profile_id', $profileId)
+    ->first();
+
 
 
             if (! $device) {

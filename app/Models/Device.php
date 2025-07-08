@@ -17,9 +17,9 @@ class Device extends Model
         'user_id',
         'status',
     ];
-//     protected $casts = [
-//     'profile_id' => 'string',
-// ];
+    protected $casts = [
+    'profile_id' => 'string',
+];
 
 
     protected $appends = ['extra_data'];
