@@ -42,12 +42,15 @@ class ProxyController extends Controller
         $baseDomain = 'https://wappi.pro/api';
         $originalUrl = $baseDomain.'/'.$any;
 
+        $fullUrl = $originalUrl . '?' . http_build_query($request->query());
+\Log::info('Forwarding request to: ' . $fullUrl);
+
         $method = $request->method();
 
         $headers = array_merge(
-    array_map(fn($h) => is_array($h) ? implode(',', $h) : $h, $request->headers->all()),
-    ['Authorization' => '40703bb7812b727ec01c24f2da518c407342559c']
-);
+            array_map(fn ($h) => is_array($h) ? implode(',', $h) : $h, $request->headers->all()),
+            ['Authorization' => '40703bb7812b727ec01c24f2da518c407342559c']
+        );
 
         $http = Http::withHeaders($headers);
 
