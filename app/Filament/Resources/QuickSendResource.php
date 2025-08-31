@@ -86,7 +86,7 @@ class QuickSendResource extends Resource
                 ->required()
                 ->helperText(__('helperText.file_name')),
         ])
-        ->createAnother(false)
+        // ->createAnother(false)
         ;
     }
 
